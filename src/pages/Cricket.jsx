@@ -41,7 +41,15 @@ function Cricket()
     return (
         <div>
             <form onSubmit={(event)=>handleSubmit(event)}>
-                <input onChange={()=>}
+                <input value={form.matchLabel} onChange={(e)=>setForm({...form, matchLabel: e.target.value})} type="text" placeholder="Enter Match"></input>
+                <input value={form.predictedOutcome} onChange={(e)=>setForm({...form, predictedOutcome : e.target.value})} type="text" placeholder="Enter Prediction"></input>
+                <button type="submit">Submit</button>
+                {predictions.map((prediction)=> (
+                    <div key={prediction.id}>
+                        <p>{prediction.matchLabel}</p>
+                        <p>{prediction.predictedOutcome}</p>
+                    </div>
+                ))}
             </form>
         </div>
     )
