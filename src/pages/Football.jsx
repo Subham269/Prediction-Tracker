@@ -1,10 +1,14 @@
 import {useState, useEffect} from 'react'
 function Football()
 {
+    const [activeId,setActiveId]=useState(null)
+    const [outcomeInput,setOutcomeInput]=useState('')
     const [form,setForm]= useState(
         {
             matchLabel: '' , 
-            predictedOutcome: '' 
+            predictedOutcome: '' ,
+            actualOutcome: '',
+            isCorrect: false
         }   
     )
     const [predictions,setPredictions]= useState([])
@@ -18,7 +22,7 @@ function Football()
             sport : 'football',
             matchLabel : form.matchLabel,
             predictedOutcome: form.predictedOutcome,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString() 
         }
         const updated = [...predictions,newPrediction]
         setPredictions(updated)
@@ -38,6 +42,25 @@ function Football()
         }
     },[])
 
+    function handleResult()
+    {
+        const updated = predictions.map((prediction) => {
+            if(prediction.id===activeId)
+            {
+                return {
+                    ...prediction,
+                    actualOutcome: outcomeInput,
+                    isCorrect: outcomeInput === prediction.predictedOutcome 
+                }
+            }
+            return prediction
+        })
+        setPredictions(updated)
+        localStorage.setItem("predictions",JSON.stringify(updated))
+        setActiveId(null)
+        setOutcomeInput('')
+    }
+
     return (
         <div>
             <form onSubmit={(event)=>handleSubmit(event)}>
@@ -48,6 +71,18 @@ function Football()
                     prediction.sport==='football' && <div key={prediction.id}>
                         <p>{prediction.matchLabel}</p>
                         <p>{prediction.predictedOutcome}</p>
+                        {!prediction.actualOutcome && (
+                        <button type="button" onClick={()=>setActiveId(prediction.id)}>Record Result</button>
+                        )}
+                        {prediction.actualOutcome && (
+                            <p>Actual: {prediction.actualOutcome} — {prediction.isCorrect ? '✅ Correct' : '❌ Wrong'}</p>
+                            )}
+                        {prediction.id===activeId && (
+                        <div>
+                            <input value={outcomeInput} type="text" onChange={(e)=>setOutcomeInput(e.target.value)}></input>
+                           <button type="button" onClick={()=>handleResult()}>Check!</button>
+                        </div>
+                        )}
                     </div>
                 ))}
             </form>
