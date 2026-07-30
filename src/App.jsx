@@ -7,7 +7,7 @@ import Home from './pages/Home'
 function App()
 {
     return (
-        <div>
+        <div className="min-h-screen bg-gradient-to-br from-cyan-400 to-yellow-300">
             <nav>
                 <Link to='/Home'>Home</Link>
                 <Link to='/Cricket'>Cricket</Link>
@@ -16,7 +16,7 @@ function App()
             </nav>
 
             <Routes>
-                <Route path='/' element={<Home/>}></Route>
+                <Route path='/Home' element={<Home/>}></Route>
                 <Route path='/Cricket' element={<Cricket/>}></Route>
                 <Route path='/Football' element={<Football/>}></Route>
                 <Route path='/Stats' element={<Stats/>}></Route>
