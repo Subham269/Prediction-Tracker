@@ -62,13 +62,14 @@ function Cricket()
     }
 
     return (
-        <div>
+        <div className="flex flex-col items-center justify-center max-w-3xl mx-auto px-6 py-10">
+            <h1 className="text-5xl font-bold mb-10 text-gray-750">Cricket</h1>
             <form onSubmit={(event)=>handleSubmit(event)}>
-                <input value={form.matchLabel} onChange={(e)=>setForm({...form, matchLabel: e.target.value})} type="text" placeholder="Enter Match"></input>
-                <input value={form.predictedOutcome} onChange={(e)=>setForm({...form, predictedOutcome : e.target.value})} type="text" placeholder="Enter Prediction"></input>
-                <button type="submit">Submit</button>
+                <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.matchLabel} onChange={(e)=>setForm({...form, matchLabel: e.target.value})} type="text" placeholder="Enter Match"></input>
+                <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.predictedOutcome} onChange={(e)=>setForm({...form, predictedOutcome : e.target.value})} type="text" placeholder="Enter Prediction"></input>
+                <button className="px-3 py-2" type="submit">Submit</button>
                 {predictions.map((prediction)=> (
-                    prediction.sport==='cricket' && <div key={prediction.id}>
+                    prediction.sport==='cricket' && <div className="flex flex-col justify-center items-center" key={prediction.id}>
                         <p>{prediction.matchLabel}</p>
                         <p>{prediction.predictedOutcome}</p>
                         {!prediction.actualOutcome && (
