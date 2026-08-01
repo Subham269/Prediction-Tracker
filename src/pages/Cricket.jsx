@@ -63,14 +63,14 @@ function Cricket()
 
     return (
         <div className="flex flex-col items-center justify-center max-w-3xl mx-auto px-6 py-10">
-            <h1 className="text-5xl font-bold mb-10 text-gray-750">Cricket</h1>
+            <h1 className="text-5xl font-bold mb-10 text-gray-800">Cricket</h1>
             <form onSubmit={(event)=>handleSubmit(event)}>
                 <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.matchLabel} onChange={(e)=>setForm({...form, matchLabel: e.target.value})} type="text" placeholder="Enter Match"></input>
                 <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.predictedOutcome} onChange={(e)=>setForm({...form, predictedOutcome : e.target.value.trim()})} type="text" placeholder="Enter Prediction"></input>
                 <button className="px-3 py-2 border border-gray-300 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-lg font-medium text-xl text-gray-300 " type="submit">Submit</button>
                 {predictions.map((prediction)=> (
                     prediction.sport==='cricket' && <div className="flex flex-col justify-center items-center" key={prediction.id}>
-                        <div className="flex flex-col border border-gray-200 rounded-xl p-4 mt-3 mb-3 br-white/70  justify-center items-center">
+                        <div className="flex flex-col border border-gray-200 rounded-xl p-4 mt-3 mb-3 bg-white/30  justify-center items-center">
                             <p className="font-semibold text-gray-800 text-2xl ">Match : {prediction.matchLabel}</p>
                             <p className="text-xl text-gray-600 mt-1">Your Prediction : {prediction.predictedOutcome}</p>
                             {!prediction.actualOutcome && (
