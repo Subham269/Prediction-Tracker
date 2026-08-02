@@ -63,7 +63,7 @@ function Football()
 
     return (
         <div className="flex flex-col items-center justify-center max-w-3xl mx-auto px-6 py-10">
-            <h1 className="text-5xl font-bold mb-10 text-gray-7/800">Football</h1>
+            <h1 className="text-5xl font-bold mb-10 text-gray-800">Football</h1>
             <form onSubmit={(event)=>handleSubmit(event)}>
                 <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.matchLabel} onChange={(e)=>setForm({...form, matchLabel: e.target.value})} type="text" placeholder="Enter Match"></input>
                 <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.predictedOutcome} onChange={(e)=>setForm({...form, predictedOutcome : e.target.value.trim()})} type="text" placeholder="Enter Prediction"></input>
