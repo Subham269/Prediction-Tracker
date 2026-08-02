@@ -1,16 +1,67 @@
-# React + Vite
+# 🏆 Sports Prediction Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A React app that lets you log your sports predictions before matches happen, record what actually happened afterward, and track your accuracy over time.
 
-Currently, two official plugins are available:
+🔗 Live Demo: [https://prediction-tracker-subham.netlify.app/]
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+React · React Router · Tailwind CSS · Netlify
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+🔍 Log predictions for Cricket and Football before a match
+✅ Manually Record actual results once the match is over
+📊 Live accuracy stats — correct vs. total attempted
+🗂️ Full prediction history
+💾 Data persists across sessions via localStorage
+🎨 Clean, responsive UI with a custom gradient theme
 
-## Expanding the Oxlint configuration
+## 🛠️ Built With
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- React (functional components + hooks)
+- Vite for fast dev/build tooling
+- React Router for multi-page navigation
+- Tailwind CSS for styling
+- localStorage for client-side persistence
+- Netlify for deployment
+
+## ⚙️ How It Works
+
+Each prediction is stored as an object — match label, your predicted outcome, and (once known) the actual outcome. Recording a result uses an immutable update pattern (`.map()` + spread) to find and update the matching prediction without disturbing the rest of the history. Stats are calculated live by filtering the full prediction list on every render — no separate counters to keep in sync, so the numbers can never drift out of date.
+
+## 🚀 Getting Started
+
+Clone the repo and run it locally:
+
+```bash
+git clone https://github.com/Subham269/Prediction-Tracker
+cd prediction-tracker
+npm install
+npm run dev
+```
+
+## 📸 Preview
+
+[screenshot]![alt text](<Screenshot 2026-08-02 213742.png>)
+[screenshot]![alt text](<Screenshot 2026-08-02 213759.png>)
+[screenshot]![alt text](<Screenshot 2026-08-02 213824.png>)
+
+## 📚 What I Learned
+
+This project was built as a hands-on way to practice:
+
+- Multi-page routing and shared layout with React Router
+- Managing multiple related pieces of state (form state vs. active state vs seasonal states)
+- Reading/writing structured data to localStorage with JSON implementation
+- Immutable state updates on arrays of objects — adding, and finding-and-updating a single item
+- Conditional rendering and conditional styling based on data
+- Debugging real logic bugs (stale state closures, button `type` defaults inside forms, scoping issues)
+- Using TailWind CSS to give a modern UI to the app
+
+## 🔮 Future Improvements
+
+- Node.js + Express backend with a real database
+- Multi-device sync
+- Auto-fetch real match data via a public sports API
+- A page dedicated to MMA 
+
+Made by Subham Saha — follow the build journey on [LinkedIn](https://www.linkedin.com/in/subham-saha-72ab062a3/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_recent_activity_content_view%3BdPmW9iW3TruMUjHcrQuGeQ%3D%3D).
