@@ -41,9 +41,9 @@ npm run dev
 
 ## 📸 Preview
 
-[screenshot]![alt text](<Screenshot 2026-08-02 213742.png>)
-[screenshot]![alt text](<Screenshot 2026-08-02 213759.png>)
-[screenshot]![alt text](<Screenshot 2026-08-02 213824.png>)
+![alt text](<Screenshot 2026-08-02 213742.png>)
+![alt text](<Screenshot 2026-08-02 213759.png>)
+![alt text](<Screenshot 2026-08-02 213824.png>)
 
 ## 📚 What I Learned
 
