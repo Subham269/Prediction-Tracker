@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "server": "nodemon src/backend/backend.js",
     "lint": "oxlint",
     "preview": "vite preview"
   },
