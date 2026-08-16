@@ -1,5 +1,7 @@
 import express from 'express'
+import cors from 'cors'
 const app=express()
+app.use(cors ({origin : 'http://localhost:5173'}))
 app.use(express.json())
 
 import DATABASE from 'better-sqlite3'
@@ -8,7 +10,9 @@ db.pragma('foreign_keys=ON');
 
 db.exec(`CREATE TABLE IF NOT EXISTS matches(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    matchLabel TEXT NOT NULL,
+    team1 TEXT NOT NULL,
+    team2 TEXT NOT NULL,
+    sport TEXT NOT NULL,
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')))
     `)
 db.exec(`CREATE TABLE IF NOT EXISTS predictions(
@@ -22,15 +26,24 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
     FOREIGN KEY (matchId) REFERENCES matches(id))`)
 
 app.get('/api/matches',(req,res)=> {
-    const mts=db.prepare('SELECT * FROM matches').all();
-    res.json(mts);
+    const {sport}=req.query
+    let matches;
+    if(!sport)
+        matches=b.prepare('SELECT * FROM matches WHERE sport = ? ').all(sport);
+    else 
+        matches=db.prepare('SELECT * FROM matches').all();
+    res.json(matches);
 })
 app.post('/api/matches',(req,res)=> {
-    const {matchLabel} = req.body;
-    if(!matchLabel)
-    return res.status(400).json({error : 'MatchLabel is required!'});
-    const stmt=db.prepare('INSERT INTO matches (matchLabel) VALUES (?)').run(matchLabel);
-    res.status(201).json({id: stmt.lastINsertRowid, matchLabel});
+    const {team1} = req.body;
+    const {team2} = req.body;
+    if(!team1 || !team2)
+    return res.status(400).json({error : 'Both Teams are required!'});
+    const {sport} = req.body;
+    if(!sport)
+    return res.status(400).json({error : 'Sport is required!'});
+    const stmt=db.prepare('INSERT INTO matches (team1, team2, sport) VALUES (?,?,?)').run(team1,team2,sport);
+    res.status(201).json({id: stmt.lastInsertRowid, team1, team2});
 });
 app.get('/api/predictions',(req,res)=> {
     const sts=db.prepare('SELECT * FROM predictions').all();
