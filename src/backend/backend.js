@@ -28,7 +28,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
 app.get('/api/matches',(req,res)=> {
     const {sport}=req.query
     let matches;
-    if(!sport)
+    if(sport)
         matches=b.prepare('SELECT * FROM matches WHERE sport = ? ').all(sport);
     else 
         matches=db.prepare('SELECT * FROM matches').all();
@@ -51,11 +51,11 @@ app.get('/api/predictions',(req,res)=> {
 })
 app.post('/api/predictions',(req,res)=> {
     try {
-        const {predictedOutcome} = req.body; 
+        const {predictedOutcome,matchId} = req.body; 
         if(!predictedOutcome)
         return res.status(400).json({error : 'Predicted Outcome is required!'});
         const stmts=db.prepare('INSERT INTO predictions (matchId, predictedOutcome) VALUES (? , ?)').run(req.body.matchId,predictedOutcome);
-        res.status(201).json({id : stmts.lastInsertRowid, predictedOutcome}); 
+        res.status(201).json({id : stmts.lastInsertRowid,predictedOutcome,matchId }); 
     }
     catch(error)
     {
