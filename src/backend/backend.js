@@ -29,7 +29,7 @@ app.get('/api/matches',(req,res)=> {
     const {sport}=req.query
     let matches;
     if(sport)
-        matches=b.prepare('SELECT * FROM matches WHERE sport = ? ').all(sport);
+        matches=db.prepare('SELECT * FROM matches WHERE sport = ? ').all(sport);
     else 
         matches=db.prepare('SELECT * FROM matches').all();
     res.json(matches);
