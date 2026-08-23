@@ -1,29 +1,36 @@
-import {Routes,Route, Link} from 'react-router-dom'
+import {Routes,Route} from 'react-router-dom'
 import Cricket from './pages/Cricket'
 import Football from './pages/Football'
 import Stats from './pages/Stats'
 import Home from './pages/Home'
 import { Toaster } from 'sonner'
+import AppSidebar from './components/ui/AppSidebar'
+import { SidebarProvider } from '@/components/ui/sidebar'
 
 function App()
 {
     return (
         <>
-            <Toaster position="top-center" richColors></Toaster>
-            <div className="min-h-screen bg-gradient-to-br from-cyan-400 to-yellow-300">
-                <nav className="flex items-center justify-center gap-20 px-20 py-4">
-                    <Link to='/' className="px-7 py-3 bg-gray-300 rounded-lg font-medium text-2xl hover:bg-[#c4c9d1] transition-colors hover:scale-110 transition all">Home</Link>
-                    <Link to='/Cricket' className="px-7 py-3 bg-gray-300 rounded-lg font-medium text-2xl hover:bg-[#c4c9d1] transition-colors hover:scale-110 transition all">Cricket</Link>
-                    <Link to='/Football' className="px-7 py-3 bg-gray-300 rounded-lg font-medium text-2xl hover:bg-[#c4c9d1] transition-colors hover:scale-110 transition all">Football</Link>
-                    <Link to='/Stats' className="px-7 py-3 bg-gray-300 rounded-lg font-medium text-2xl hover:bg-[#c4c9d1] transition-colors hover:scale-110 transition all">Stats</Link>
-                </nav>
+        <div className="flex min-h-screen [background:radial-gradient(circle_at_20%_10%,rgba(16,185,129,0.35),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(34,211,238,0.30),transparent_35%),#06100F]">
 
-                <Routes>
-                    <Route path='/' element={<Home/>}></Route>
-                    <Route path='/Cricket' element={<Cricket/>}></Route>
-                    <Route path='/Football' element={<Football/>}></Route>
-                    <Route path='/Stats' element={<Stats/>}></Route>
-                </Routes>
+            <Toaster position="top-center" richColors></Toaster>
+
+            <SidebarProvider className="bg-transparent">
+                
+            
+                
+
+                    <AppSidebar/>
+                    <main className="flex-1 bg-transparent">
+                        <Routes>
+                            <Route path='/' element={<Home/>}></Route>
+                            <Route path='/Cricket' element={<Cricket/>}></Route>
+                            <Route path='/Football' element={<Football/>}></Route>
+                            <Route path='/Stats' element={<Stats/>}></Route>
+                        </Routes>
+                    </main>
+                
+            </SidebarProvider>
             </div>
         </>
     )
