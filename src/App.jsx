@@ -7,6 +7,7 @@ import { Toaster } from 'sonner'
 import AppSidebar from './layouts/AppSidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import AppHeader  from './layouts/AppHeader'
+import AppFooter  from './layouts/AppFooter'
 
 function App()
 {
@@ -28,6 +29,7 @@ function App()
           </main>
         </SidebarProvider>
       </div>
+      <AppFooter/>
     </div>
   )
 }

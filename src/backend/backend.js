@@ -48,6 +48,20 @@ app.post('/api/matches',(req,res)=> {
 app.get('/api/predictions',(req,res)=> {
     const sts=db.prepare('SELECT * FROM predictions').all();
     res.json(sts);
+    const total=predictions.length;
+    const correct=predictions.filter(p=> p.isCorrect==='true').length;
+    const resolved = predictions.filter(p => p.actualOutcome!= null)
+    const sorted = [...resolved].sort(
+        (a,b)=> new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    let streak=0;
+    for (const p of sorted)
+    {
+        if (p.isCorrect == 'true')
+            streak++;
+        else 
+            break;
+    }
 })
 app.post('/api/predictions',(req,res)=> {
     try {
@@ -64,7 +78,7 @@ app.post('/api/predictions',(req,res)=> {
         {
             return res.status(400).json({error : 'Match Doesnt exist'})
         }
-        res.status(500).json({erro: 'Internal Server Error'})
+        res.status(500).json({error: 'Internal Server Error'})
     }
 })
 app.patch('/api/predictions/:id',(req,res)=> {
