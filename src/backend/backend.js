@@ -23,7 +23,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
     isCorrect TEXT,
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')),
     
-    FOREIGN KEY (matchId) REFERENCES matches(id))`)
+    FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE)`)
 
 app.get('/api/matches',(req,res)=> {
     const {sport}=req.query
@@ -46,22 +46,9 @@ app.post('/api/matches',(req,res)=> {
     res.status(201).json({id: stmt.lastInsertRowid, team1, team2});
 });
 app.get('/api/predictions',(req,res)=> {
-    const sts=db.prepare('SELECT * FROM predictions').all();
+    const sts=db.prepare('SELECT p.id, p.matchId, p.predictedOutcome, p.actualOutcome, p.isCorrect, p.createdAt, m.sport, m.team1, m.team2 FROM predictions p JOIN matches m ON p.matchId = m.id').all();
     res.json(sts);
-    const total=predictions.length;
-    const correct=predictions.filter(p=> p.isCorrect==='true').length;
-    const resolved = predictions.filter(p => p.actualOutcome!= null)
-    const sorted = [...resolved].sort(
-        (a,b)=> new Date(b.createdAt) - new Date(a.createdAt)
-    );
-    let streak=0;
-    for (const p of sorted)
-    {
-        if (p.isCorrect == 'true')
-            streak++;
-        else 
-            break;
-    }
+
 })
 app.post('/api/predictions',(req,res)=> {
     try {
