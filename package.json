@@ -6,18 +6,21 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "server": "nodemon src/backend/backend.js",
+    "server": "nodemon backend/backend.js",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
+    "bcrypt": "^6.0.0",
     "better-sqlite3": "^13.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "flag-icons": "^7.5.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.33.0",
     "radix-ui": "^1.6.7",
     "react": "^19.2.7",

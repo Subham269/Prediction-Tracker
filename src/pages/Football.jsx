@@ -1,102 +1,324 @@
-import {useState, useEffect} from 'react'
-function Football()
-{
-    const [activeId,setActiveId]=useState(null)
-    const [outcomeInput,setOutcomeInput]=useState('')
-    const [form,setForm]= useState(
-        {
-            matchLabel: '' , 
-            predictedOutcome: '' ,
-            actualOutcome: '',
-            isCorrect: false
-        }   
-    )
-    const [predictions,setPredictions]= useState([])
+import { toast } from 'sonner'
+import { useState, useEffect } from 'react'
+import heroImg from '@/assets/Cricket-bro.svg'
+import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "lucide-react"
 
-    function handleSubmit(e)
-    {
-        e.preventDefault();
+function Football() {
+    const [submitting, setSubmitting] = useState(false);
+    const [matches, setMatches] = useState([])
+    const [predictions, setPredictions] = useState([])
 
-        const newPrediction = {
-            id:crypto.randomUUID(),
-            sport : 'football',
-            matchLabel : form.matchLabel,
-            predictedOutcome: form.predictedOutcome,
-            createdAt: new Date().toISOString() 
-        }
-        const updated = [...predictions,newPrediction]
-        setPredictions(updated)
-        localStorage.setItem("predictions",JSON.stringify(updated))
-        
-        setForm({
-            matchLabel: '',
-            predictedOutcome: ''
+    useEffect(() => {
+        fetch('http://localhost:3000/api/matches?sport=football')
+            .then(response => response.json())
+            .then(data => {
+                setMatches(data)
+            })
+    }, [])
+
+    useEffect(() => {
+        fetch('http://localhost:3000/api/predictions')
+            .then(response => response.json())
+            .then(data => {
+                setPredictions(data)
+            })
+    }, [])
+
+    const handlePredict = (matchId, PredictedOutcome) => {
+        setSubmitting(true);
+        fetch('http://localhost:3000/api/predictions', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                predictedOutcome: PredictedOutcome,
+                matchId: matchId
+            })
         })
-    }
-    useEffect(()=> {
-        const savedPredictions= localStorage.getItem("predictions");
-
-        if(savedPredictions)
-        {
-            setPredictions(JSON.parse(savedPredictions))
-        }
-    },[])
-
-    function handleResult()
-    {
-        const updated = predictions.map((prediction) => {
-            if(prediction.id===activeId)
-            {
-                return {
-                    ...prediction,
-                    actualOutcome: outcomeInput,
-                    isCorrect: outcomeInput === prediction.predictedOutcome 
+            .then(res => res.json())
+            .then(data => {
+                if (data.id) {
+                    toast.success('Prediction Made Successfully!')
+                    setPredictions(prevPredictions => [...prevPredictions, data]);
+                } else {
+                    toast.error('Could Not Save Prediction. Try again')
                 }
-            }
-            return prediction
-        })
-        setPredictions(updated)
-        localStorage.setItem("predictions",JSON.stringify(updated))
-        setActiveId(null)
-        setOutcomeInput('')
+            })
+            .catch(() => {
+                toast.error('Could Not Save Prediction. Try again');
+            })
+            .finally(() => {
+                setSubmitting(false);
+            })
     }
+
+    const predictions_c = predictions.filter(p => p.sport === "football")
+    const total = predictions_c.length;
+    const resolved = predictions_c.filter(p => p.actualOutcome !== null);
+    const correct = resolved.filter(p => p.isCorrect === "true").length;
+    const accuracy = resolved.length
+        ? ((correct / resolved.length) * 100).toFixed(1)
+        : 0;
+
+    const sorted = [...resolved].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    let streak = 0;
+    for (const p of sorted) {
+        if (p.isCorrect === "true") streak++;
+        else break;
+    }
+
+    sorted.reverse();
+
+    let bestStreak = 0;
+    let tempStreak = 0;
+    for (const p of sorted) {
+        if (p.isCorrect == "true")
+            tempStreak++;
+        else {
+            bestStreak = Math.max(bestStreak, tempStreak);
+            tempStreak = 0;
+        }
+    }
+
+    const teamToFlagCode = (team) => {
+        const map = { Brazil: "br",
+        Argentina: "ar",
+        Germany: "de",
+        France: "fr",
+        Spain: "es",
+        Portugal: "pt",
+        Italy: "it",
+        England: "gb-eng",
+        Netherlands: "nl",
+        Belgium: "be",
+        Croatia: "hr",
+        Uruguay: "uy",
+        Mexico: "mx",
+        USA: "us",
+        Japan: "jp",
+        "South Korea": "kr",
+        Morocco: "ma",
+        Senegal: "sn",
+        Nigeria: "ng",
+        Ghana: "gh",
+        Egypt: "eg",
+        Switzerland: "ch",
+        Poland: "pl",
+        Denmark: "dk",
+        Sweden: "se",
+        Serbia: "rs",
+        Colombia: "co",
+        Chile: "cl",
+        Ecuador: "ec",
+        "Saudi Arabia": "sa",
+        Australia: "au",
+        Canada: "ca",
+        Wales: "gb-wls",
+        Scotland: "gb-sct",
+        "Ivory Coast": "ci",
+        Cameroon: "cm",
+        Tunisia: "tn",
+        Algeria: "dz",
+        "South Africa": "za", };
+        return map[team] || "un";
+    };
 
     return (
-        <div className="flex flex-col items-center justify-center max-w-3xl mx-auto px-6 py-10">
-            <h1 className="text-5xl font-bold mb-10 text-gray-800">Football</h1>
-            <form onSubmit={(event)=>handleSubmit(event)}>
-                <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.matchLabel} onChange={(e)=>setForm({...form, matchLabel: e.target.value})} type="text" placeholder="Enter Match"></input>
-                <input className="border border-gray-300 px-3 py-2 mr-6 bg-gray-300 rounded-lg font-medium text-xl" value={form.predictedOutcome} onChange={(e)=>setForm({...form, predictedOutcome : e.target.value.trim()})} type="text" placeholder="Enter Prediction"></input>
-                <button className="px-3 py-2 border border-gray-300 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-lg font-medium text-xl text-gray-300 " type="submit">Submit</button>
-                {predictions.map((prediction)=> (
-                    prediction.sport==='football' && <div className="flex flex-col justify-center items-center" key={prediction.id}>
-                        <div className="flex flex-col border border-gray-200 rounded-xl p-4 mt-3 mb-3 bg-white/30  justify-center items-center">
-                            <p className="font-semibold text-gray-800 text-2xl ">Match : {prediction.matchLabel}</p>
-                            <p className="text-xl text-gray-600 mt-1">Your Prediction : {prediction.predictedOutcome}</p>
-                            {!prediction.actualOutcome && (
-                            <button className="px-1 py-1 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-lg font-medium text-md text-gray-300" type="button" onClick={()=>setActiveId(prediction.id)}>Record Result</button>
-                            )}
-                            {prediction.actualOutcome && (
-                                <div className="flex flex-col items-center">
-                                <p className="text-xl text-gray-600 mt-1">Actual: {prediction.actualOutcome}</p>  
-                                <p className={"mt-1 text-xl "+(
-      prediction.isCorrect ? "text-green-600" : "text-red-500"
-                            )}>{prediction.isCorrect ? '✅ Correct' : '❌ Wrong'}</p>
-                                </div>
-                                )}
+        <div className="max-w-6xl mx-auto px-4 py-10 space-y-12">
+            {/* Football / Hero */}
+            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="max-w-xl text-center md:text-left">
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                        Football<span className="text-green-600"> Predictions</span>
+                    </h1>
+                    <p className="mt-4 text-lg text-muted-foreground text-center md:text-left">
+                        Predict the outcome, Show your skills and climb the Leaderboard.
+                    </p>
+                </div>
+                <img
+                    src={heroImg}
+                    alt="Prediction illustration"
+                    className="w-64 md:w-96 shrink-0"
+                />
+            </section>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+                {/* Left Column: Matches List */}
+                <div className="md:col-span-7 space-y-4">
+                    <h2 className="text-2xl font-bold mb-4">All Matches</h2>
+
+                    {matches.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">No Matches Yet!</p>
+                    )}
+
+                    {matches.map((match) => {
+                        const alreadyPredicted = predictions.some(p => p.matchId === match.id);
+                        const myPrediction = predictions.find(p => p.matchId === match.id);
                         
-                            {prediction.id===activeId && (
-                            <div className="flex items-center justify-center">
-                                <input className="border border-gray-500 px-1 py-1 mr-6 bg-gray-300 rounded-lg font-medium text-md mt-2" value={outcomeInput} type="text" onChange={(e)=>setOutcomeInput(e.target.value.trim())}></input>
-                            <button className="border border-gray-500 px-1 py-1 mr-6 bg-pink-300 rounded-lg font-medium text-md mt-2" type="button" onClick={()=>handleResult()}>Check!</button>
+                        return (
+                            <div
+                                key={match.id}
+                                className="relative rounded-2xl border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 bg-white dark:bg-background flex flex-col md:flex-row items-center gap-4 md:gap-6"
+                            >
+                                {/* Date badge */}
+                                <div className="flex flex-col items-center justify-center rounded-lg bg-green-50 dark:bg-green-950 px-4 py-2 min-w-[64px]">
+                                    <span className="text-xs text-muted-foreground uppercase">
+                                        {new Date(match.date).toLocaleString('en-US', { month: 'short' })}
+                                    </span>
+                                    <span className="text-lg font-bold">
+                                        {new Date(match.date).getDate()}
+                                    </span>
+                                </div>
+
+                                {/* Teams */}
+                                <div className="flex-1 flex items-center justify-center gap-6">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span className={`fi fi-${teamToFlagCode(match.team1)} text-3xl rounded`} />
+                                        <span className="font-medium">{match.team1}</span>
+                                    </div>
+
+                                    <span className="text-muted-foreground font-semibold">vs</span>
+
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span className={`fi fi-${teamToFlagCode(match.team2)} text-3xl rounded`} />
+                                        <span className="font-medium">{match.team2}</span>
+                                    </div>
+                                </div>
+
+                                {/* Prediction */}
+                                <div className="flex flex-col items-center gap-2 min-w-[160px]">
+                                    <span className="text-xs text-muted-foreground">Your Prediction</span>
+
+                                    {alreadyPredicted ? (
+
+                                        myPrediction.isCorrect === 'true' ? (
+                                        <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
+                                            ✓ Correct ({myPrediction.predictedOutcome})
+                                        </div>
+                                    ) : myPrediction.isCorrect === 'false' ? (
+                                        <div className="flex flex-col px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-medium text-sm">
+                                            ✗ Incorrect ({myPrediction.predictedOutcome})
+                                        </div>
+                                    ) :
+                                        (<div className="flex flex-col items-center">
+                                        <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
+                                            ✓ {myPrediction?.predictedOutcome}
+                                            
+                                            
+                                        </div>
+                                        <span className="text-[11px] text-muted-foreground text-center font-normal tracking-tight mt-1">Come back later to check if you're correct!</span>
+                                        </div>
+                                    )) :
+                                        (<div className="flex gap-2">
+                                            <button
+                                                disabled={submitting}
+                                                onClick={() => handlePredict(match.id, match.team1)}
+                                                className="px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors"
+                                            >
+                                                {match.team1}
+                                            </button>
+                                            <button
+                                                disabled={submitting}
+                                                onClick={() => handlePredict(match.id, match.team2)}
+                                                className="px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors"
+                                            >
+                                                {match.team2}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            )}
+                        );
+                    })}
+                </div>
+
+                {/* Right Column: Stats & Tips */}
+                <div className="md:col-span-5 space-y-6">
+                    {/* Stats Card */}
+                    <div className="p-6 rounded-2xl shadow-lg bg-white dark:bg-background space-y-4">
+                        <h2 className="text-xl font-semibold flex items-center gap-1.5 tracking-tighter">
+                            <BarChartBig className="w-5 h-5 text-green-500" strokeWidth={2.5} /> Your Football Stats
+                        </h2>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="p-3 shadow-sm rounded-lg bg-green-50 dark:bg-green-950">
+                                <p className="text-sm text-muted-foreground">Total Predictions</p>
+                                <p className="text-2xl font-bold">{total}</p>
+                            </div>
+
+                            <div className="p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <p className="text-sm text-muted-foreground">Correct Predictions</p>
+                                <p className="text-2xl font-bold text-green-600">{correct}</p>
+                            </div>
+
+                            <div className="p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <p className="text-sm text-muted-foreground">Accuracy</p>
+                                <p className="text-2xl font-bold text-green-600">{accuracy}%</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <p className="text-sm text-muted-foreground">Win Streak 🔥</p>
+                                <p className="text-2xl font-bold">{streak}</p>
+                            </div>
+
+                            <div className="p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <p className="text-sm text-muted-foreground">Best Streak 🏆</p>
+                                <p className="text-2xl font-bold">{bestStreak}</p>
+                            </div>
                         </div>
                     </div>
-                ))}
-            </form>
+
+                    {/* Prediction Tips */}
+                    <div className="p-6 rounded-2xl shadow-lg bg-white dark:bg-background space-y-4">
+                        <h2 className="text-xl font-semibold flex items-center gap-2">
+                            <Lightbulb className="w-5 h-5 text-green-500" strokeWidth={2.5} /> Prediction Tips
+                        </h2>
+
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3 p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <TrendingUp className="w-5 h-5 text-green-500 mt-1" strokeWidth={2.5} />
+                                <div>
+                                    <p className="font-medium text-lg">Check team form</p>
+                                    <p className="text-sm text-muted-foreground">Recent performance matters a lot.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <CloudSun className="w-5 h-5 text-green-500 mt-1" strokeWidth={2.5} />
+                                <div>
+                                    <p className="font-medium text-lg">Windy Match Alert</p>
+                                    <p className="text-sm text-muted-foreground">Strong winds ruin long passes—expect messy play, bad crosses, and way more corner kicks.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <Users className="w-5 h-5 text-green-500 mt-1" strokeWidth={2.5} />
+                                <div>
+                                    <p className="font-medium text-lg">Head to head</p>
+                                    <p className="text-sm text-muted-foreground">Analyze past encounters.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
+                                <Radio className="w-5 h-5 text-green-500 mt-1" strokeWidth={2.5} />
+                                <div>
+                                    <p className="font-medium text-lg">Stay updated</p>
+                                    <p className="text-sm text-muted-foreground">Follow live updates before predicting.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     )
 }
 
-export default Football
+export default Football;

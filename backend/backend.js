@@ -8,11 +8,18 @@ import DATABASE from 'better-sqlite3'
 const db=new DATABASE('predictions-app.db')
 db.pragma('foreign_keys=ON');
 
+db.exec(`CREATE TABLE IF NOT EXISTS user(
+    id INTEGER  PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password 
+    )`)
 db.exec(`CREATE TABLE IF NOT EXISTS matches(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     team1 TEXT NOT NULL,
     team2 TEXT NOT NULL,
     sport TEXT NOT NULL,
+    date TEXT NOT NULL,
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')))
     `)
 db.exec(`CREATE TABLE IF NOT EXISTS predictions(
@@ -40,9 +47,11 @@ app.post('/api/matches',(req,res)=> {
     if(!team1 || !team2)
     return res.status(400).json({error : 'Both Teams are required!'});
     const {sport} = req.body;
+    const {date} = req.body;
+    if (!date) return res.status(400).json({ error: 'Date is required!' });
     if(!sport)
     return res.status(400).json({error : 'Sport is required!'});
-    const stmt=db.prepare('INSERT INTO matches (team1, team2, sport) VALUES (?,?,?)').run(team1,team2,sport);
+    const stmt=db.prepare('INSERT INTO matches (team1, team2, sport, date) VALUES (?,?,?,?)').run(team1,team2,sport,date);
     res.status(201).json({id: stmt.lastInsertRowid, team1, team2});
 });
 app.get('/api/predictions',(req,res)=> {

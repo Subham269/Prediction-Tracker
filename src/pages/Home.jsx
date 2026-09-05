@@ -87,7 +87,7 @@ function StatCard({ label, value, valueClass = "" }) {
 
 function FeatureCard({ icon: Icon, title, desc }) {
   return (
-    <Card>
+    <Card className="bg-green-50">
       <CardContent className="p-5 flex gap-3">
         <div className="bg-green-100 dark:bg-green-900 p-2 rounded-lg h-fit">
           <Icon className="text-green-600 stroke-3" size={20} />
