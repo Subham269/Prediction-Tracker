@@ -1,3 +1,4 @@
+require('dotenv').config();
 import express from 'express'
 import cors from 'cors'
 const app=express()
@@ -7,12 +8,16 @@ app.use(express.json())
 import DATABASE from 'better-sqlite3'
 const db=new DATABASE('predictions-app.db')
 db.pragma('foreign_keys=ON');
+const bcrypt= require('bcrypt');
+const jwt = require('jsonwebtoken')
+const fbi_level_secret_key= process.env.jwtsecret;
 
 db.exec(`CREATE TABLE IF NOT EXISTS user(
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password 
+    email VARCHAR(254) UNIQUE NOT NULL,
+    password VARCHAR(50) NOT NULL, 
+    createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes'))
     )`)
 db.exec(`CREATE TABLE IF NOT EXISTS matches(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,13 +28,14 @@ db.exec(`CREATE TABLE IF NOT EXISTS matches(
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')))
     `)
 db.exec(`CREATE TABLE IF NOT EXISTS predictions(
+    userId 
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     matchId INTEGER,
     predictedOutcome TEXT NOT NULL,
     actualOutcome TEXT,
     isCorrect TEXT,
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')),
-    
+    userId INTEGER REFERENCES users(id),
     FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE)`)
 
 app.get('/api/matches',(req,res)=> {
@@ -87,6 +93,79 @@ app.patch('/api/predictions/:id',(req,res)=> {
     if(sta.changes===0)
         return res.status(404).json({error: 'Not Found'})
     res.status(200).json('Done');
+})
+app.post('/api/auth/register',async (req,res)=> {
+    try 
+    {
+        const {email} = req.body;
+        const {username}= req.body
+        if(!email)
+            return res.status(400).json({error : 'E-mail is required!'});
+        if(!username)
+            return res.status(400).json({error : 'Username is required!'});
+        const {password} = req.body;
+        if(!password)
+            return res.status(400).json({error : 'Password is required!'});
+        const hashedPassword = await bcrypt.hash(password,10)
+        const normalizedemail = email.trim().toLowerCase();
+        const normalizedusername = username.trim();
+        const stms=db.prepare(`INSERT INTO user(email, password, username) VALUES(? , ?, ?)`
+        ).run(normalizedemail,hashedPassword,normalizedusername)
+
+        return res.status(201).json({id : stms.lastInsertRowid, normalizedemail})
+    }
+    catch(error)
+    {
+        if(error.message.includes('UNIQUE constraint failed: user.email'))
+        {
+             return res.status(409).json({ error: 'Email already registered' });
+        }
+        else if(error.message.includes('UNIQUE constraint failed: user.username'))
+        {
+           return res.status(409).json({ error: 'Username already exists' });
+        }
+        else
+        {
+            console.error(error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
+})
+
+app.post('api/auth/login', async (req,res)=> {
+    try 
+    {
+        const {email,password} = req.body;
+        if(!email)
+            return res.status(400).json({error : 'E-mail is required!'});
+        if(!password)
+            return res.status(400).json({error : 'Password is required!'});
+
+        const user=db.prepare(`SELECT * FROM user WHERE email=?`).get(email)
+        if(!user)
+        {
+            return res.status(401).json({error : 'Invalid E-mail or Password'})
+        }
+        const passwordMatch = bcrypt.compare(password,user.password);
+        if(!passwordMatch)
+        {
+            return res.status(401).json({error : 'Invalid E-mail or Password'})
+        }
+        const token= jwt.sign(
+            { userId : user.id},
+            fbi_level_secret_key,
+            { expiresIn: '7d'}
+        )
+        return res.status(200).json(token)
+    }
+    catch {
+            console.error(error);
+
+            return res.status(500).json({
+            error: 'Internal Server Error'
+            });
+    }
 })
 
 app.listen(3000 , (error)=> {
