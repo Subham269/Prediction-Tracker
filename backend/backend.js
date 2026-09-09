@@ -38,7 +38,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
     userId INTEGER REFERENCES users(id),
     FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE)`)
 
-app.get('/api/matches',(req,res)=> {
+app.get('/api/matches', (req,res)=> {
     const {sport}=req.query
     let matches;
     if(sport)
@@ -47,7 +47,7 @@ app.get('/api/matches',(req,res)=> {
         matches=db.prepare('SELECT * FROM matches').all();
     res.json(matches);
 })
-app.post('/api/matches',(req,res)=> {
+app.post('/api/matches',authenticate, (req,res)=> {
     const {team1} = req.body;
     const {team2} = req.body;
     if(!team1 || !team2)
@@ -60,12 +60,12 @@ app.post('/api/matches',(req,res)=> {
     const stmt=db.prepare('INSERT INTO matches (team1, team2, sport, date) VALUES (?,?,?,?)').run(team1,team2,sport,date);
     res.status(201).json({id: stmt.lastInsertRowid, team1, team2});
 });
-app.get('/api/predictions',(req,res)=> {
+app.get('/api/predictions',authenticate, (req,res)=> {
     const sts=db.prepare('SELECT p.id, p.matchId, p.predictedOutcome, p.actualOutcome, p.isCorrect, p.createdAt, m.sport, m.team1, m.team2 FROM predictions p JOIN matches m ON p.matchId = m.id').all();
     res.json(sts);
 
 })
-app.post('/api/predictions',(req,res)=> {
+app.post('/api/predictions',authenticate,(req,res)=> {
     try {
         const {predictedOutcome,matchId} = req.body; 
         if(!predictedOutcome)
@@ -83,7 +83,7 @@ app.post('/api/predictions',(req,res)=> {
         res.status(500).json({error: 'Internal Server Error'})
     }
 })
-app.patch('/api/predictions/:id',(req,res)=> {
+app.patch('/api/predictions/:id',authenticate, (req,res)=> {
     const {actualOutcome}=req.body;
     const stap=db.prepare('SELECT predictedOutcome FROM predictions WHERE id= ?' ).get(req.params.id);
     if(!stap)
@@ -167,6 +167,31 @@ app.post('api/auth/login', async (req,res)=> {
             });
     }
 })
+
+function authenticate(req,res,next) 
+{
+    const authHeader=req.headers.authorization;
+    if(!authHeader)
+    {
+        return res.status(401).json({error : "Authorization header required"})
+    }
+    const bound=authHeader.split(' ');
+
+    if(bound.length!=2 && bound[0]!= 'Bearer')
+    {
+        return res.status(401).json({error : "Invalid authorization header"})
+    }
+    const token = bound[1];
+    try {
+        const deloaded = jwt.verify(token,fbi_level_secret_key)
+        req.userId = deloaded.userId;
+        next();
+    }
+    catch(error) {
+        res.status(401).json({error : 'Invalid or expired token'})
+    }
+}
+
 
 app.listen(3000 , (error)=> {
     if(error)
