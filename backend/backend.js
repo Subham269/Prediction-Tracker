@@ -1,22 +1,30 @@
-require('dotenv').config();
-import express from 'express'
-import cors from 'cors'
-const app=express()
-app.use(cors ({origin : 'http://localhost:5173'}))
-app.use(express.json())
+import dotenv from 'dotenv';
+dotenv.config();
 
-import DATABASE from 'better-sqlite3'
-const db=new DATABASE('predictions-app.db')
+import express from 'express';
+import cors from 'cors';
+import Database from 'better-sqlite3';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+const app = express();
+
+app.use(cors({
+    origin: 'http://localhost:5173'
+}));
+
+app.use(express.json());
+
+const db = new Database('predictions-app.db');
+
 db.pragma('foreign_keys=ON');
-const bcrypt= require('bcrypt');
-const jwt = require('jsonwebtoken')
 const fbi_level_secret_key= process.env.jwtsecret;
 
 db.exec(`CREATE TABLE IF NOT EXISTS user(
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(254) UNIQUE NOT NULL,
-    password VARCHAR(50) NOT NULL, 
+    password TEXT NOT NULL, 
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes'))
     )`)
 db.exec(`CREATE TABLE IF NOT EXISTS matches(
@@ -27,15 +35,14 @@ db.exec(`CREATE TABLE IF NOT EXISTS matches(
     date TEXT NOT NULL,
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')))
     `)
-db.exec(`CREATE TABLE IF NOT EXISTS predictions(
-    userId 
+db.exec(`CREATE TABLE IF NOT EXISTS predictions( 
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     matchId INTEGER,
     predictedOutcome TEXT NOT NULL,
     actualOutcome TEXT,
     isCorrect TEXT,
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')),
-    userId INTEGER REFERENCES users(id),
+    userId INTEGER REFERENCES user(id),
     FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE)`)
 
 app.get('/api/matches', (req,res)=> {
@@ -61,7 +68,7 @@ app.post('/api/matches',authenticate, (req,res)=> {
     res.status(201).json({id: stmt.lastInsertRowid, team1, team2});
 });
 app.get('/api/predictions',authenticate, (req,res)=> {
-    const sts=db.prepare('SELECT p.id, p.matchId, p.predictedOutcome, p.actualOutcome, p.isCorrect, p.createdAt, m.sport, m.team1, m.team2 FROM predictions p JOIN matches m ON p.matchId = m.id').all();
+    const sts=db.prepare('SELECT p.id, p.matchId, p.predictedOutcome, p.actualOutcome, p.isCorrect, p.createdAt, m.sport, m.team1, m.team2 FROM predictions p JOIN matches m ON p.matchId = m.id WHERE userId= ?').all(req.userId);
     res.json(sts);
 
 })
@@ -70,7 +77,8 @@ app.post('/api/predictions',authenticate,(req,res)=> {
         const {predictedOutcome,matchId} = req.body; 
         if(!predictedOutcome)
         return res.status(400).json({error : 'Predicted Outcome is required!'});
-        const stmts=db.prepare('INSERT INTO predictions (matchId, predictedOutcome) VALUES (? , ?)').run(req.body.matchId,predictedOutcome);
+        const userId = req.userId
+        const stmts=db.prepare('INSERT INTO predictions (matchId, predictedOutcome, userId) VALUES (? , ?, ?)').run(req.body.matchId,predictedOutcome,userId);
         res.status(201).json({id : stmts.lastInsertRowid,predictedOutcome,matchId }); 
     }
     catch(error)
@@ -85,11 +93,11 @@ app.post('/api/predictions',authenticate,(req,res)=> {
 })
 app.patch('/api/predictions/:id',authenticate, (req,res)=> {
     const {actualOutcome}=req.body;
-    const stap=db.prepare('SELECT predictedOutcome FROM predictions WHERE id= ?' ).get(req.params.id);
+    const stap=db.prepare('SELECT predictedOutcome FROM predictions WHERE id= ? AND userId = ? ' ).get(req.params.id,req.userId);
     if(!stap)
         return res.status(404).json({error : 'Prediction Not Found'});
     const step = (stap.predictedOutcome === actualOutcome)?'true':'false';
-    const sta=db.prepare('UPDATE predictions SET actualOutcome = ?, isCorrect = ? WHERE id = ?').run(actualOutcome,step,req.params.id);
+    const sta=db.prepare('UPDATE predictions SET actualOutcome = ?, isCorrect = ? WHERE id = ? AND userId = ? ').run(actualOutcome,step,req.params.id,req.userId);
     if(sta.changes===0)
         return res.status(404).json({error: 'Not Found'})
     res.status(200).json('Done');
@@ -101,6 +109,10 @@ app.post('/api/auth/register',async (req,res)=> {
         const {username}= req.body
         if(!email)
             return res.status(400).json({error : 'E-mail is required!'});
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email address' });
+}
         if(!username)
             return res.status(400).json({error : 'Username is required!'});
         const {password} = req.body;
@@ -112,7 +124,7 @@ app.post('/api/auth/register',async (req,res)=> {
         const stms=db.prepare(`INSERT INTO user(email, password, username) VALUES(? , ?, ?)`
         ).run(normalizedemail,hashedPassword,normalizedusername)
 
-        return res.status(201).json({id : stms.lastInsertRowid, normalizedemail})
+        return res.status(201).json({id : stms.lastInsertRowid,email : normalizedemail})
     }
     catch(error)
     {
@@ -122,7 +134,7 @@ app.post('/api/auth/register',async (req,res)=> {
         }
         else if(error.message.includes('UNIQUE constraint failed: user.username'))
         {
-           return res.status(409).json({ error: 'Username already exists' });
+           return res.status(409).json({ error: 'Username is Taken' });
         }
         else
         {
@@ -133,21 +145,26 @@ app.post('/api/auth/register',async (req,res)=> {
 
 })
 
-app.post('api/auth/login', async (req,res)=> {
+app.post('/api/auth/login', async (req,res)=> {
     try 
     {
         const {email,password} = req.body;
         if(!email)
             return res.status(400).json({error : 'E-mail is required!'});
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email address' });
+}
         if(!password)
             return res.status(400).json({error : 'Password is required!'});
-
-        const user=db.prepare(`SELECT * FROM user WHERE email=?`).get(email)
+        const normalizedemail = email.trim().toLowerCase();
+        const user=db.prepare(`SELECT * FROM user WHERE email=?`).get(normalizedemail)
         if(!user)
         {
             return res.status(401).json({error : 'Invalid E-mail or Password'})
         }
-        const passwordMatch = bcrypt.compare(password,user.password);
+        const passwordMatch = await bcrypt.compare(password,user.password);
         if(!passwordMatch)
         {
             return res.status(401).json({error : 'Invalid E-mail or Password'})
@@ -157,9 +174,9 @@ app.post('api/auth/login', async (req,res)=> {
             fbi_level_secret_key,
             { expiresIn: '7d'}
         )
-        return res.status(200).json(token)
+        return res.status(200).json({token})
     }
-    catch {
+    catch(error) {
             console.error(error);
 
             return res.status(500).json({
@@ -177,7 +194,7 @@ function authenticate(req,res,next)
     }
     const bound=authHeader.split(' ');
 
-    if(bound.length!=2 && bound[0]!= 'Bearer')
+    if(bound.length!=2 || bound[0]!= 'Bearer')
     {
         return res.status(401).json({error : "Invalid authorization header"})
     }
