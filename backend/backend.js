@@ -174,7 +174,9 @@ app.post('/api/auth/login', async (req,res)=> {
             fbi_level_secret_key,
             { expiresIn: '7d'}
         )
-        return res.status(200).json({token})
+        return res.status(200).json({token,
+            user: { id: user.id, username: user.username, email: user.email }
+        })
     }
     catch(error) {
             console.error(error);

@@ -5,13 +5,14 @@ const AuthContext = createContext();
 export function AuthProvider({children}) 
 {
     const [token,setToken] = useState(localStorage.getItem(token) || null);
-    const [user,setUser] = useState(localStorage.getItem(user) ||null);
+    const [user,setUser] = useState(()=>  {const stored = localStorage.getItem('user');
+    return stored ? JSON.parse(stored) : null});
 
     const login = (token,user) => {
         setToken(token)
         setUser(user)
-        localStorage.setItem(token)
-        localStorage.setItem(user)
+        localStorage.setItem('token',token)
+        localStorage.setItem('user',JSON.stringify(user))
     }
 
     const logout = (token,user) => {
