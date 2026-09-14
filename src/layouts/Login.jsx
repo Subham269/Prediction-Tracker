@@ -14,11 +14,10 @@ import {useNavigate} from 'react-router-dom'
 import {useAuth} from '@/context/AuthContext.jsx'
 
 
-function SignUp({authModal,setAuthModal}) {
+function Login({authModal,setAuthModal}) {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [username, setUsername] = useState("");
     const [error,setError] = useState("");
     const {login} = useAuth();
     const navigate = useNavigate();
@@ -27,23 +26,6 @@ function SignUp({authModal,setAuthModal}) {
     {
         try {
             e.preventDefault();
-            const RegisterProcess = await fetch('http://localhost:3000/api/auth/register', {
-            method : 'POST',
-            headers : {
-                'Content-Type' : 'application/json'
-            },
-            body : JSON.stringify({
-                email,password,username
-            })
-            });
-
-            const RegisterData = await RegisterProcess.json();
-
-            if(!RegisterProcess.ok)
-            {
-                setError(RegisterData.error);
-                return ;
-            }
 
             const LoginProcess = await fetch('http://localhost:3000/api/auth/login', {
                 method : 'POST' , 
@@ -76,29 +58,16 @@ function SignUp({authModal,setAuthModal}) {
     return (
         <div className="flex justify-center items-center min-h-screen">
 
-            <Dialog open= {authModal==='signup'} onOpenChange={() => setAuthModal(null)}className="w-[400px]">
+            <Dialog open= {authModal==='login'} onOpenChange={() => setAuthModal(null)}className="w-[400px]">
 
                 <DialogHeader>
-                    <DialogTitle>Create an Account</DialogTitle>
+                    <DialogTitle>Sign in to PredictionOS</DialogTitle>
                 </DialogHeader>
 
                 <DialogContent>
 
                     <form className="space-y-4">
 
-                        <div className="space-y-2">
-                            <Label htmlFor="username">
-                                Username
-                            </Label>
-
-                            <Input
-                                id="username"
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                placeholder="Enter your username"
-                            />
-                        </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="email">
@@ -132,7 +101,7 @@ function SignUp({authModal,setAuthModal}) {
                         </div>
 
                         <Button type="submit" className="w-full" onSubmit={handleSubmit}>
-                            Sign Up
+                            Login
                         </Button>
 
                     </form>
@@ -145,4 +114,4 @@ function SignUp({authModal,setAuthModal}) {
     );
 }
 
-export default SignUp;
+export default Login;
