@@ -2,11 +2,15 @@ import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 import heroImg from '@/assets/Cricket-bro.svg'
 import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "lucide-react"
+import {apiFetch} from "@/lib/api.js"
+import {useAuth} from '@/context/AuthContext.jsx'
+
 
 function Football() {
     const [submitting, setSubmitting] = useState(false);
     const [matches, setMatches] = useState([])
     const [predictions, setPredictions] = useState([])
+    const { token, setAuthModal } = useAuth();
 
     useEffect(() => {
         fetch('http://localhost:3000/api/matches?sport=football')
@@ -17,16 +21,41 @@ function Football() {
     }, [])
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/predictions')
-            .then(response => response.json())
-            .then(data => {
-                setPredictions(data)
-            })
-    }, [])
+        async function loadPredictions() {
+        try 
+            {
+                const response = await apiFetch('http://localhost:3000/api/predictions',{},token)
 
-    const handlePredict = (matchId, PredictedOutcome) => {
+            if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+            const data = await response.json();
+            setPredictions(data);
+            }
+        catch(error) 
+        {
+            console.error("Failed to load predictions:", error);
+        }
+        }
+
+        if(token)
+        {
+            loadPredictions();
+        }
+    }, [token])
+
+    const handlePredict = async (matchId, PredictedOutcome) => {
+        if(!token)
+        {
+            toast.error("Please log in to make a prediction");
+            setAuthModal("login");
+            return;
+        }
         setSubmitting(true);
-        fetch('http://localhost:3000/api/predictions', {
+        try 
+        {
+            const response = await apiFetch('http://localhost:3000/api/predictions', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
@@ -35,23 +64,31 @@ function Football() {
                 predictedOutcome: PredictedOutcome,
                 matchId: matchId
             })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.id) {
+            , token })
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.id) {
                     toast.success('Prediction Made Successfully!')
                     setPredictions(prevPredictions => [...prevPredictions, data]);
                 } else {
                     toast.error('Could Not Save Prediction. Try again')
                 }
-            })
-            .catch(() => {
-                toast.error('Could Not Save Prediction. Try again');
-            })
-            .finally(() => {
-                setSubmitting(false);
-            })
-    }
+
+        }
+        catch(error)
+        {
+            toast.error('Could Not Save Prediction. Try again');
+        }
+        finally
+        {
+            setSubmitting(false);
+        }
+            
+}
 
     const predictions_c = predictions.filter(p => p.sport === "football")
     const total = predictions_c.length;

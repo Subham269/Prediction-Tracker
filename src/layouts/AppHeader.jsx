@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { SignUp} from './SignUp.jsx'
-import {Login} from './Login.jsx'
+import SignUp from './SignUp.jsx'
+import Login from './Login.jsx'
 import {useAuth} from '@/context/AuthContext.jsx'
 
 function AppHeader()
 {
     const {user,logout} = useAuth();
-    const [authModal,setAuthModal] = useState(null);
+    const {authModal,setAuthModal} = useAuth();;
     return (
+      <>
     <header className="fixed top-0 right-0 left-0 z-50 flex items-center justify-between px-6 py-3 bg-white border-b border-gray-100 shadow-sm">
         <div className="flex items-center font-bold text-lg">
         Prediction<span className="text-[#06A248]">OS</span>
@@ -32,16 +33,18 @@ function AppHeader()
         </div>
       )
       }
-      <SignUp authModal={authModal}
+      
+
+    
+    </header>
+    <SignUp authModal={authModal}
       setAuthModal={setAuthModal} 
       />
 
       <Login authModal={authModal}
       setAuthModal={setAuthModal} 
       />
-
-    
-    </header>
+      </>
     );
 }
 

@@ -76,13 +76,13 @@ function SignUp({authModal,setAuthModal}) {
     return (
         <div className="flex justify-center items-center min-h-screen">
 
-            <Dialog open= {authModal==='signup'} onOpenChange={() => setAuthModal(null)}className="w-[400px]">
-
+            <Dialog open= {authModal==='signUp'} onOpenChange={() => setAuthModal(null)}className="w-[400px]">
+            <DialogContent className="w-[400px]">
                 <DialogHeader>
                     <DialogTitle>Create an Account</DialogTitle>
                 </DialogHeader>
 
-                <DialogContent>
+                
 
                     <form className="space-y-4">
 

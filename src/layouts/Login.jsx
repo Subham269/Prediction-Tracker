@@ -59,12 +59,12 @@ function Login({authModal,setAuthModal}) {
         <div className="flex justify-center items-center min-h-screen">
 
             <Dialog open= {authModal==='login'} onOpenChange={() => setAuthModal(null)}className="w-[400px]">
-
+            <DialogContent className="w-[400px]">
                 <DialogHeader>
                     <DialogTitle>Sign in to PredictionOS</DialogTitle>
                 </DialogHeader>
 
-                <DialogContent>
+                
 
                     <form className="space-y-4">
 

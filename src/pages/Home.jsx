@@ -2,17 +2,30 @@ import { Target, BarChart3, Trophy, Zap } from "lucide-react";
 import {Card, CardContent} from '@/components/ui/card'
 import heroImg from '@/assets/hero_img.svg'
 import {useState, useEffect } from 'react'
+import {useAuth} from '@/context/AuthContext'
 function Home()
 {
     const [predictions, setPredictions] = useState([]);
 
-    useEffect(() => {
-    fetch("http://localhost:3000/api/predictions")
-        .then(res => res.json())
-        .then(data => setPredictions(data))
-        .catch(err => console.error(err));
-    }, []);
+    const { token } = useAuth();
 
+    useEffect(() => {
+        if (!token) return;
+
+        fetch("http://localhost:3000/api/predictions", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => setPredictions(data))
+            .catch(err => console.error(err));
+    }, [token]);
     const total = predictions.length;
     const resolved = predictions.filter(p => p.actualOutcome !== null);
     const correct = resolved.filter(p => p.isCorrect === "true").length;
