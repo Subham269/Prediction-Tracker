@@ -56,7 +56,7 @@ function Login({authModal,setAuthModal}) {
     
 
     return (
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex justify-center items-center ">
 
             <Dialog open= {authModal==='login'} onOpenChange={() => setAuthModal(null)}className="w-[400px]">
             <DialogContent className="w-[400px]">
@@ -103,6 +103,18 @@ function Login({authModal,setAuthModal}) {
                         <Button type="submit" className="w-full" onSubmit={handleSubmit}>
                             Login
                         </Button>
+
+                        <p className= "text-center">
+                        Don't Have an Account?{" "}
+                        <button
+                            type="button"
+                            onClick={() => setAuthModal("signUp")}
+                            className="text-[#06A248] hover:underline"
+                        >
+                            Sign Up
+                        </button>
+                        </p>
+
 
                     </form>
 

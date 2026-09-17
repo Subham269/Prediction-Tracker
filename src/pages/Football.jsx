@@ -16,6 +16,7 @@ function Football() {
         fetch('http://localhost:3000/api/matches?sport=football')
             .then(response => response.json())
             .then(data => {
+                console.log("MATCHES FROM API:", data);
                 setMatches(data)
             })
     }, [])
