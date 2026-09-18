@@ -84,7 +84,7 @@ function SignUp({authModal,setAuthModal}) {
 
                 
 
-                    <form className="space-y-4">
+                    <form className="space-y-4"  onSubmit={handleSubmit}>
 
                         <div className="space-y-2">
                             <Label htmlFor="username">

@@ -3,6 +3,7 @@ import Cricket from './pages/Cricket'
 import Football from './pages/Football'
 import Stats from './pages/Stats'
 import Home from './pages/Home'
+import Leaderboard from './pages/leaderboard'
 import { Toaster } from 'sonner'
 import AppSidebar from './layouts/AppSidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -25,6 +26,7 @@ function App()
               <Route path='/Cricket' element={<Cricket/>} />
               <Route path='/Football' element={<Football/>} />
               <Route path='/Stats' element={<Stats/>} />
+              <Route path='/Leaderboard' element={<Leaderboard/>} />
             </Routes>
           </main>
         </SidebarProvider>

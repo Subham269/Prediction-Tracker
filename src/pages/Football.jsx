@@ -2,7 +2,7 @@ import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 import heroImg from '@/assets/Cricket-bro.svg'
 import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "lucide-react"
-import {apiFetch} from "@/lib/api.js"
+import apiFetch from "@/lib/api.js"
 import {useAuth} from '@/context/AuthContext.jsx'
 
 
@@ -328,7 +328,7 @@ function Football() {
                             </div>
 
                             <div className="flex items-start gap-3 p-3 rounded-lg shadow-sm bg-green-50 dark:bg-green-950">
-                                <CloudSun className="w-5 h-5 text-green-500 mt-1" strokeWidth={2.5} />
+                                <CloudSun className="w-10 h-10 text-green-500 mt-1" strokeWidth={2.5} />
                                 <div>
                                     <p className="font-medium text-lg">Windy Match Alert</p>
                                     <p className="text-sm text-muted-foreground">Strong winds ruin long passes—expect messy play, bad crosses, and way more corner kicks.</p>

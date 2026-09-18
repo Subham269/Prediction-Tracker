@@ -24,6 +24,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS user(
     id INTEGER  PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(254) UNIQUE NOT NULL,
+    points INTEGER NOT NULL DEFAULT 0,
     password TEXT NOT NULL, 
     createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes'))
     )`)
@@ -186,6 +187,12 @@ app.post('/api/auth/login', async (req,res)=> {
             });
     }
 })
+
+app.get('/api/leaderboard',authenticate, (req,res)=>{
+    const strows=db.prepare('SELECT id, username,points FROM user ORDER BY points DESC, username ASC LIMIT 20').all();
+    res.json(strows.map((r,i)=>({rank : i+1, ...r})));
+})
+
 
 function authenticate(req,res,next) 
 {

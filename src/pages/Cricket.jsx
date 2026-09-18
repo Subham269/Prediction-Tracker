@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import heroImg from '@/assets/Cricket-bro.svg'
 import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "lucide-react"
 import {useAuth} from '@/context/AuthContext.jsx'
+import apiFetch from "@/lib/api.js";
 
 
 function Cricket() {
@@ -10,6 +11,7 @@ function Cricket() {
     const [matches, setMatches] = useState([])
     const [predictions, setPredictions] = useState([])
     const { token, setAuthModal } = useAuth();
+    console.log("TOKEN IN CRICKET:", token);
     
 
     useEffect(() => {
@@ -24,6 +26,7 @@ function Cricket() {
         async function loadPredictions() {
         try 
             {
+                console.log("ABOUT TO CALL APIFETCH", token);
                 const response = await apiFetch('http://localhost:3000/api/predictions',{},token)
 
             if (!response.ok) {
@@ -63,8 +66,8 @@ function Cricket() {
                 body: JSON.stringify({
                     predictedOutcome: PredictedOutcome,
                     matchId: matchId
-                })
-                , token })
+                })}
+                , token )
     
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

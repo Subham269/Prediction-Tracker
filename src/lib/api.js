@@ -1,6 +1,7 @@
 
-export async function apiFetch(url ,options = {} , token)
+export default async function apiFetch(url ,options = {} , token)
 {
+    console.log("TOKEN INSIDE API:", token);
     const response = await fetch(url, {
         ...options, 
         headers : 

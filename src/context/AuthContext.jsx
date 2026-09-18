@@ -19,8 +19,8 @@ export function AuthProvider({children})
     const logout = (token,user) => {
     setToken(null)
     setUser(null)
-    localStorage.removeItem(token)
-    localStorage.removeItem(user)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
     }
     return (
         <AuthContext.Provider value = {{token, user, login , logout,  authModal, setAuthModal}}>
