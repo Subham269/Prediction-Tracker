@@ -15,7 +15,7 @@ export default function Leaderboard()
     const [rows,setRows] = useState(null);
 
     useEffect(()=>{
-        cancelled = false;
+        let cancelled = false;
         fetch('http://localhost:3000/api/leaderboard')
             .then((response) => {
                 !cancelled && response.json()})

@@ -64,8 +64,8 @@ function Football() {
             body: JSON.stringify({
                 predictedOutcome: PredictedOutcome,
                 matchId: matchId
-            })
-            , token })
+            })}
+            , token )
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
