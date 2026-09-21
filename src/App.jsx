@@ -9,6 +9,7 @@ import AppSidebar from './layouts/AppSidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import AppHeader  from './layouts/AppHeader'
 import AppFooter  from './layouts/AppFooter'
+import ProtectedRoute from './lib/protectedroute'
 
 function App()
 {
@@ -26,7 +27,11 @@ function App()
               <Route path='/Cricket' element={<Cricket/>} />
               <Route path='/Football' element={<Football/>} />
               <Route path='/Stats' element={<Stats/>} />
-              <Route path='/Leaderboard' element={<Leaderboard/>} />
+              <Route path='/Leaderboard' element={
+                <ProtectedRoute>
+                    <Leaderboard/>
+                </ProtectedRoute>
+                } />
             </Routes>
           </main>
         </SidebarProvider>

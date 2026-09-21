@@ -98,6 +98,7 @@ app.patch('/api/predictions/:id',authenticate, (req,res)=> {
     if(!stap)
         return res.status(404).json({error : 'Prediction Not Found'});
     const step = (stap.predictedOutcome === actualOutcome)?'true':'false';
+    user.points= (step=='true')?(user.points+3):(user.points-1);
     const sta=db.prepare('UPDATE predictions SET actualOutcome = ?, isCorrect = ? WHERE id = ? AND userId = ? ').run(actualOutcome,step,req.params.id,req.userId);
     if(sta.changes===0)
         return res.status(404).json({error: 'Not Found'})
@@ -189,7 +190,7 @@ app.post('/api/auth/login', async (req,res)=> {
 })
 
 app.get('/api/leaderboard',authenticate, (req,res)=>{
-    const strows=db.prepare('SELECT id, username,points FROM user ORDER BY points DESC, username ASC LIMIT 20').all();
+    const strows=db.prepare('SELECT id, username,points FROM "user" ORDER BY points DESC, username ASC LIMIT 20').all();
     res.json(strows.map((r,i)=>({rank : i+1, ...r})));
 })
 

@@ -28,7 +28,7 @@ function Football() {
                 const response = await apiFetch('http://localhost:3000/api/predictions',{},token)
 
             if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${res.status}`);
                 }
 
             const data = await response.json();
