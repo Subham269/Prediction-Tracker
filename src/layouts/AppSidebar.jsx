@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { NavLink, useLocation, matchPath } from "react-router-dom";
-import { Home, Zap, Trophy, BarChart3, History, ClipboardList, PodiumIcon } from "lucide-react";
+import { Home, Zap, Trophy, BarChart3, History, ClipboardList, PodiumIcon,  } from "lucide-react";
 
 function AppSidebar() {
   const location = useLocation();

@@ -132,7 +132,7 @@ export default function Leaderboard()
                             </td>
                             <td
                             className={cn(
-                                'px-6 py-3.5 text-right text-base font-medium tabular-nums',
+                                'px-6 py-3.5 text-center text-base font-medium tabular-nums',
                                 row.rank === 1 && 'font-bold text-green-600 dark:text-green-400'
                             )}
                             >

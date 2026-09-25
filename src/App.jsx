@@ -4,6 +4,7 @@ import Football from './pages/Football'
 import Stats from './pages/Stats'
 import Home from './pages/Home'
 import Leaderboard from './pages/leaderboard'
+import MyPredictions from './pages/My_predictions'
 import { Toaster } from 'sonner'
 import AppSidebar from './layouts/AppSidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -32,7 +33,13 @@ function App()
                     <Leaderboard/>
                 </ProtectedRoute>
                 } />
+                <Route path='/MyPredictions' element={
+                <ProtectedRoute>
+                    <MyPredictions/>
+                </ProtectedRoute>
+                } />
             </Routes>
+              
           </main>
         </SidebarProvider>
       </div>

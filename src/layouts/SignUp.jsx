@@ -65,6 +65,7 @@ function SignUp({authModal,setAuthModal}) {
 
             login(LoginData.token, LoginData.user) // local storage
             navigate('/')
+            setAuthModal('null')
         }
         catch(error)
         {
