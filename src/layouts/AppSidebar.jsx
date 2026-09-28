@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { NavLink, useLocation, matchPath } from "react-router-dom";
-import { Home, Zap, Trophy, BarChart3, History, ClipboardList, PodiumIcon,  } from "lucide-react";
+import { Home, Zap, Trophy, BarChart3, ClipboardList, PodiumIcon,  } from "lucide-react";
 
 function AppSidebar() {
   const location = useLocation();
@@ -18,7 +18,7 @@ function AppSidebar() {
     { name: "Football", path: "/Football", icon: Trophy },
     { name: "Stats", path: "/Stats", icon: BarChart3 },
     { name: "My Predictions", path: "/MyPredictions", icon: ClipboardList },
-    { name: "History", path: "/History", icon: History },
+
     {name : "Leaderboard", path: "/Leaderboard", icon : PodiumIcon },
   ];
 

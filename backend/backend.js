@@ -46,6 +46,8 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
     userId INTEGER REFERENCES user(id),
     FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE)`)
 
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_predictions_user_match_guard ON predictions     (userId,matchId)')
+
 app.get('/api/matches', (req,res)=> {
     const {sport}=req.query
     let matches;
@@ -85,7 +87,11 @@ app.post('/api/predictions',authenticate,(req,res)=> {
     catch(error)
     {
         console.log(error)
-        if(error.code==='SQLITE_CONSTRAINT_FOREIGNKEY')
+        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") 
+        {
+        return res.status(409).json({ error: "You've already predicted this match." });
+        }
+        else if(error.code==='SQLITE_CONSTRAINT_FOREIGNKEY')
         {
             return res.status(400).json({error : 'Match Doesnt exist'})
         }

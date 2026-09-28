@@ -66,7 +66,10 @@ function Football() {
                 matchId: matchId
             })}
             , token )
-
+            if(response.status == 409)
+            {
+                toast.error('Prediction Already Exists !')
+            }
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
