@@ -4,6 +4,7 @@ import heroImg from '@/assets/Cricket-bro.svg'
 import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "lucide-react"
 import apiFetch from "@/lib/api.js"
 import {useAuth} from '@/context/AuthContext.jsx'
+import { cn } from "@/lib/utils";
 
 
 function Football() {
@@ -70,11 +71,14 @@ function Football() {
             {
                 toast.error('Prediction Already Exists !')
             }
+
+            const data = await response.json().catch(() => ({}));
             if (!response.ok) {
+                toast.error(data.error || "Something went wrong.");
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            
             if (data.id) {
                     toast.success('Prediction Made Successfully!')
                     setPredictions(prevPredictions => [...prevPredictions, data]);
@@ -93,7 +97,7 @@ function Football() {
         }
             
 }
-
+    
     const predictions_c = predictions.filter(p => p.sport === "football")
     const total = predictions_c.length;
     const resolved = predictions_c.filter(p => p.actualOutcome !== null);
@@ -197,6 +201,8 @@ function Football() {
                     )}
 
                     {matches.map((match) => {
+                        const started =
+                        new Date(`${match.date}T${match.startTime || "00:00"}:00+05:30`).getTime() <= Date.now();
                         const alreadyPredicted = predictions.some(p => p.matchId === match.id);
                         const myPrediction = predictions.find(p => p.matchId === match.id);
                         
@@ -233,40 +239,68 @@ function Football() {
                                 {/* Prediction */}
                                 <div className="flex flex-col items-center gap-2 min-w-[160px]">
                                     <span className="text-xs text-muted-foreground">Your Prediction</span>
+                                    
 
                                     {alreadyPredicted ? (
 
                                         myPrediction.isCorrect === 'true' ? (
-                                        <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
-                                            ✓ Correct ({myPrediction.predictedOutcome})
+                                            <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
+                                                ✓ Correct ({myPrediction.predictedOutcome})
+                                            </div>
+
+                                        ) : myPrediction.isCorrect === 'false' ? (
+                                            <div className="flex flex-col px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-medium text-sm">
+                                                ✗ Incorrect ({myPrediction.predictedOutcome})
+                                            </div>
+
+                                        ) : started ? (
+                                            <div className="flex flex-col items-center">
+                                                <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
+                                                    ✓ {myPrediction.predictedOutcome}
+                                                </div>
+
+                                                <span className="text-[11px] text-muted-foreground text-center font-normal tracking-tight mt-1">
+                                                    Come back later to check if you're correct!
+                                                </span>
+                                            </div>
+
+                                        ) : (
+                                            // Already predicted, but match hasn't started yet
+                                            <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
+                                                ✓ {myPrediction.predictedOutcome}
+                                            </div>
+                                        )
+
+                                    ) : started ? (
+
+                                        // Match started but user hasn't predicted
+                                        <div className="flex flex-col items-center">
+                                            <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 font-medium text-sm">
+                                                Prediction closed
+                                            </div>
+
+                                            <span className="text-[11px] text-muted-foreground text-center font-normal tracking-tight mt-1">
+                                                This match has already started.
+                                            </span>
                                         </div>
-                                    ) : myPrediction.isCorrect === 'false' ? (
-                                        <div className="flex flex-col px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-medium text-sm">
-                                            ✗ Incorrect ({myPrediction.predictedOutcome})
-                                        </div>
+
                                     ) :
-                                        (<div className="flex flex-col items-center">
-                                        <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
-                                            ✓ {myPrediction?.predictedOutcome}
-                                            
-                                            
-                                        </div>
-                                        <span className="text-[11px] text-muted-foreground text-center font-normal tracking-tight mt-1">Come back later to check if you're correct!</span>
-                                        </div>
-                                    )) :
                                         (<div className="flex gap-2">
+                                            {console.log(started,match.id)}
                                             <button
-                                                disabled={submitting}
+                                                disabled={started || submitting}
                                                 onClick={() => handlePredict(match.id, match.team1)}
-                                                className="px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors"
+                                                className={cn("px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors", started && "cursor-not-allowed bg-gray-400 opacity-60 hover:bg-gray-400")}
                                             >
                                                 {match.team1}
                                             </button>
                                             <button
-                                                disabled={submitting}
+                                                disabled={started || submitting}
                                                 onClick={() => handlePredict(match.id, match.team2)}
-                                                className="px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors"
+                                                className={cn("px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors", (started || submitting) &&
+                                                "cursor-not-allowed bg-gray-400 opacity-60 hover:bg-gray-400")}
                                             >
+                                                
                                                 {match.team2}
                                             </button>
                                         </div>

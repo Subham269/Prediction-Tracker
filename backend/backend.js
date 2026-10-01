@@ -48,6 +48,12 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
 
     db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_predictions_user_match_guard ON predictions     (userId,matchId)')
 
+    db.exec('ALTER TABLE matches ADD COLUMN startTime TEXT');
+
+    function matchStartMs(date, time) {
+    return new Date(`${date}T${time || "00:00"}:00+05:30`).getTime();
+    }
+
 app.get('/api/matches', (req,res)=> {
     const {sport}=req.query
     let matches;
@@ -76,11 +82,30 @@ app.get('/api/predictions',authenticate, (req,res)=> {
 
 })
 app.post('/api/predictions',authenticate,(req,res)=> {
-    try {
-        const {predictedOutcome,matchId} = req.body; 
-        if(!predictedOutcome)
+    const {predictedOutcome,matchId} = req.body;
+    if(!predictedOutcome)
         return res.status(400).json({error : 'Predicted Outcome is required!'});
-        const userId = req.userId
+    const userId = req.userId
+
+    const match = db
+    .prepare("SELECT id, date, startTime FROM matches WHERE id = ?")
+    .get(matchId);
+
+    if (!match) {
+    return res.status(404).json({ error: "Match not found." });
+    }
+
+    const startMs = matchStartMs(match.date, match.startTime);
+
+    if (Number.isNaN(startMs)) {
+    console.error("Bad date format for match", match.id, match.date);
+    return res.status(500).json({ error: "Match date is invalid." });
+    }
+
+    if (Date.now() >= startMs) {
+        return res.status(403).json({ error: "Predictions are closed for this match." });
+    }
+    try {
         const stmts=db.prepare('INSERT INTO predictions (matchId, predictedOutcome, userId) VALUES (? , ?, ?)').run(req.body.matchId,predictedOutcome,userId);
         res.status(201).json({id : stmts.lastInsertRowid,predictedOutcome,matchId }); 
     }
