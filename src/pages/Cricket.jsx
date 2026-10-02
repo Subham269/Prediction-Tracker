@@ -4,6 +4,7 @@ import heroImg from '@/assets/Cricket-bro.svg'
 import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "lucide-react"
 import {useAuth} from '@/context/AuthContext.jsx'
 import apiFetch from "@/lib/api.js";
+import { cn } from "@/lib/utils";
 
 
 function Cricket() {
@@ -72,11 +73,13 @@ function Cricket() {
                 {
                     toast.error('Prediction Already Exists !')
                 }
+
+                const data = await response.json().catch(() => ({}));
                 if (!response.ok) {
+                    toast.error(data.error || "Something went wrong.");
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
     
-                const data = await response.json();
                 if (data.id) {
                         toast.success('Prediction Made Successfully!')
                         setPredictions(prevPredictions => [...prevPredictions, data]);
@@ -134,7 +137,7 @@ function Cricket() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-10 space-y-12">
             {/* Cricket / Hero */}
-            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-8">
+            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="max-w-xl text-center md:text-left">
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
                         Cricket<span className="text-green-600"> Predictions</span>
@@ -161,13 +164,15 @@ function Cricket() {
                     )}
 
                     {matches.map((match) => {
+                        const started =
+                        new Date(`${match.date}T${match.startTime || "00:00"}:00+05:30`).getTime() <= Date.now();
                         const alreadyPredicted = predictions.some(p => p.matchId === match.id);
                         const myPrediction = predictions.find(p => p.matchId === match.id);
                         
                         return (
                             <div
                                 key={match.id}
-                                className="relative rounded-2xl border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 bg-white dark:bg-background flex flex-col md:flex-row items-center gap-4 md:gap-6"
+                                className="relative rounded-2xl border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 bg-white dark:bg-background flex flex-col md:flex-row items-center justify-between gap-4"
                             >
                                 {/* Date badge */}
                                 <div className="flex flex-col items-center justify-center rounded-lg bg-green-50 dark:bg-green-950 px-4 py-2 min-w-[64px]">
@@ -208,28 +213,37 @@ function Cricket() {
                                         <div className="flex flex-col px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-medium text-sm">
                                             ✗ Incorrect ({myPrediction.predictedOutcome})
                                         </div>
-                                    ) :
-                                        (<div className="flex flex-col items-center">
+                                    ) : started ? (
+                                        <div className="flex flex-col items-center">
                                         <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
-                                            ✓ {myPrediction?.predictedOutcome}
-                                            
-                                            
+                                            ✓ {myPrediction.predictedOutcome}
                                         </div>
                                         <span className="text-[11px] text-muted-foreground text-center font-normal tracking-tight mt-1">Come back later to check if you're correct!</span>
                                         </div>
-                                    )) :
-                                        (<div className="flex gap-2">
+                                    ) : (
+                                        <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
+                                            ✓ {myPrediction.predictedOutcome}
+                                        </div>
+                                    )) : started ? (
+                                        <div className="flex flex-col items-center">
+                                            <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 font-medium text-sm">
+                                                Prediction closed
+                                            </div>
+                                            <span className="text-[11px] text-muted-foreground text-center font-normal tracking-tight mt-1">This match has already started.</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
                                             <button
-                                                disabled={submitting}
+                                                disabled={started || submitting}
                                                 onClick={() => handlePredict(match.id, match.team1)}
-                                                className="px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors"
+                                                className={cn("px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors", started && "cursor-not-allowed bg-gray-400 opacity-60 hover:bg-gray-400")}
                                             >
                                                 {match.team1}
                                             </button>
                                             <button
-                                                disabled={submitting}
+                                                disabled={started || submitting}
                                                 onClick={() => handlePredict(match.id, match.team2)}
-                                                className="px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors"
+                                                className={cn("px-3 py-2 rounded-lg border border-green-300 hover:bg-green-50 dark:hover:bg-green-950 text-sm font-medium disabled:opacity-50 transition-colors", (started || submitting) && "cursor-not-allowed bg-gray-400 opacity-60 hover:bg-gray-400")}
                                             >
                                                 {match.team2}
                                             </button>
