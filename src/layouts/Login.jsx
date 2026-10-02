@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "@/config.js";
 
 import {
     Dialog,
@@ -27,7 +28,7 @@ function Login({authModal,setAuthModal}) {
         try {
             e.preventDefault();
 
-            const LoginProcess = await fetch('http://localhost:3000/api/auth/login', {
+            const LoginProcess = await fetch(`${API_URL}/api/auth/login`, {
                 method : 'POST' , 
                 headers : {
                     'Content-Type' : 'application/json'

@@ -48,7 +48,6 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
 
     db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_predictions_user_match_guard ON predictions     (userId,matchId)')
 
-    db.exec('ALTER TABLE matches ADD COLUMN startTime TEXT');
 
     function matchStartMs(date, time) {
     return new Date(`${date}T${time || "00:00"}:00+05:30`).getTime();
