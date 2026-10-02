@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext.jsx'
 import heroImg from '@/assets/Cricket-bro.svg'
 import apiFetch from '@/lib/api'
 import { Skeleton } from '@/components/ui/skeleton'
+import { API_URL } from '@/config.js'
 
 const teamToFlagCode = (team) => {
         const map = { Brazil: "br",
@@ -76,8 +77,8 @@ export default function MyPredictions() {
                 setLoading(true);
                 setError(null);
 
-                const response1 = await apiFetch("http://localhost:3000/api/predictions", {}, token);
-                const response2 = await apiFetch("http://localhost:3000/api/matches", {}, token);
+                const response1 = await apiFetch(`${API_URL}/api/predictions`, {}, token);
+                const response2 = await apiFetch(`${API_URL}/api/matches`, {}, token);
 
                 if (!response1.ok || !response2.ok) {
                     throw new Error(`HTTP error! status: ${response1.status} and ${response2.status}`);
@@ -102,7 +103,7 @@ export default function MyPredictions() {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-8">
+            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="max-w-xl text-center md:text-left">
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
                         My <span className="text-green-600">Predictions</span>
@@ -139,7 +140,7 @@ export default function MyPredictions() {
                         return (
                             <div
                                 key={prediction.id}
-                                className="relative rounded-2xl border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 bg-white dark:bg-background flex flex-col md:flex-row items-center gap-4 md:gap-6"
+                                className="relative rounded-2xl border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 bg-white dark:bg-background flex flex-col md:flex-row items-center justify-between gap-4"
                             >
                                 <div className="flex flex-col items-center justify-center rounded-lg bg-green-50 dark:bg-green-950 px-4 py-2 min-w-[64px]">
                                     <span className="text-xs text-muted-foreground uppercase">

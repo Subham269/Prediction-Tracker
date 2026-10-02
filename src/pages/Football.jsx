@@ -5,6 +5,7 @@ import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "luci
 import apiFetch from "@/lib/api.js"
 import {useAuth} from '@/context/AuthContext.jsx'
 import { cn } from "@/lib/utils";
+import { API_URL } from "@/config.js";
 
 
 function Football() {
@@ -14,7 +15,7 @@ function Football() {
     const { token, setAuthModal } = useAuth();
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/matches?sport=football')
+        fetch(`${API_URL}/api/matches?sport=football`)
             .then(response => response.json())
             .then(data => {
                 console.log("MATCHES FROM API:", data);
@@ -26,7 +27,7 @@ function Football() {
         async function loadPredictions() {
         try 
             {
-                const response = await apiFetch('http://localhost:3000/api/predictions',{},token)
+                const response = await apiFetch(`${API_URL}/api/predictions`,{},token)
 
             if (!response.ok) {
                     throw new Error(`HTTP error! status: ${res.status}`);
@@ -57,7 +58,7 @@ function Football() {
         setSubmitting(true);
         try 
         {
-            const response = await apiFetch('http://localhost:3000/api/predictions', {
+            const response = await apiFetch(`${API_URL}/api/predictions`, {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
@@ -174,7 +175,7 @@ function Football() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-10 space-y-12">
             {/* Football / Hero */}
-            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-8">
+            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="max-w-xl text-center md:text-left">
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
                         Football<span className="text-green-600"> Predictions</span>
@@ -209,7 +210,7 @@ function Football() {
                         return (
                             <div
                                 key={match.id}
-                                className="relative rounded-2xl border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 bg-white dark:bg-background flex flex-col md:flex-row items-center gap-4 md:gap-6"
+                                className="relative rounded-2xl border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 bg-white dark:bg-background flex flex-col md:flex-row items-center justify-between gap-4"
                             >
                                 {/* Date badge */}
                                 <div className="flex flex-col items-center justify-center rounded-lg bg-green-50 dark:bg-green-950 px-4 py-2 min-w-[64px]">
@@ -265,7 +266,6 @@ function Football() {
                                             </div>
 
                                         ) : (
-                                            // Already predicted, but match hasn't started yet
                                             <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
                                                 ✓ {myPrediction.predictedOutcome}
                                             </div>
@@ -273,7 +273,6 @@ function Football() {
 
                                     ) : started ? (
 
-                                        // Match started but user hasn't predicted
                                         <div className="flex flex-col items-center">
                                             <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 font-medium text-sm">
                                                 Prediction closed
@@ -286,7 +285,6 @@ function Football() {
 
                                     ) :
                                         (<div className="flex gap-2">
-                                            {console.log(started,match.id)}
                                             <button
                                                 disabled={started || submitting}
                                                 onClick={() => handlePredict(match.id, match.team1)}

@@ -6,6 +6,7 @@ import  apiFetch  from '@/lib/api'
 import {Skeleton} from '@/components/ui/skeleton'
 import { cn } from "@/lib/utils"
 import {useNavigate} from 'react-router-dom'
+import { API_URL } from '@/config.js'
 
 
 const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -26,7 +27,7 @@ export default function Leaderboard()
             setLoading(true);
             setError(null);
             const response = await apiFetch(
-            'http://localhost:3000/api/leaderboard',
+            `${API_URL}/api/leaderboard`,
             {},
             token
         );
@@ -64,7 +65,7 @@ export default function Leaderboard()
             <>
                 <div className="max-w-6xl mx-auto px-4 py-10 space-y-12">
                         {/* LeaderBoard / Hero */}
-                        <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                             <div className="max-w-xl text-center md:text-left">
                                 <h1 className="text-6xl md:text-5xl font-bold tracking-tight ">
                                     Leader<span className="text-green-600">Board</span>

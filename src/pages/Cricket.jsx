@@ -5,6 +5,7 @@ import { BarChartBig, Lightbulb, TrendingUp, CloudSun, Users, Radio } from "luci
 import {useAuth} from '@/context/AuthContext.jsx'
 import apiFetch from "@/lib/api.js";
 import { cn } from "@/lib/utils";
+import { API_URL } from "@/config.js";
 
 
 function Cricket() {
@@ -16,7 +17,7 @@ function Cricket() {
     
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/matches?sport=cricket')
+        fetch(`${API_URL}/api/matches?sport=cricket`)
             .then(response => response.json())
             .then(data => {
                 setMatches(data)
@@ -28,7 +29,7 @@ function Cricket() {
         try 
             {
                 console.log("ABOUT TO CALL APIFETCH", token);
-                const response = await apiFetch('http://localhost:3000/api/predictions',{},token)
+                const response = await apiFetch(`${API_URL}/api/predictions`,{},token)
 
             if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -59,7 +60,7 @@ function Cricket() {
             setSubmitting(true);
             try 
             {
-                const response = await apiFetch('http://localhost:3000/api/predictions', {
+                const response = await apiFetch(`${API_URL}/api/predictions`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json"

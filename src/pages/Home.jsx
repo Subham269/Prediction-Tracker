@@ -1,8 +1,7 @@
-import { Target, BarChart3, Trophy, Zap } from "lucide-react";
-import {Card, CardContent} from '@/components/ui/card'
-import heroImg from '@/assets/hero_img.svg'
-import {useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {useAuth} from '@/context/AuthContext'
+import { API_URL } from '@/config.js'
+
 function Home()
 {
     const [predictions, setPredictions] = useState([]);
@@ -12,7 +11,7 @@ function Home()
     useEffect(() => {
         if (!token) return;
 
-        fetch("http://localhost:3000/api/predictions", {
+        fetch(`${API_URL}/api/predictions`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -45,7 +44,7 @@ function Home()
     return (
         <div className="max-w-6xl mx-auto px-4 py-10 space-y-12">
             {/* Welcome / Hero */}
-            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-8">
+            <section className="shadow-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-background rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="max-w-xl text-center md:text-left">
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
                     Welcome to <span className="text-green-600">PredictionOS</span>
