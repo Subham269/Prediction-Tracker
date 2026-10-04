@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children }) {
     useEffect(() => {
         if (!token && !hasShownToast) {
             hasShownToast= true;
-            toast.error('Please Log in to view LeaderBoard')
+            toast.error('Please Log in to view this Page')
             setAuthModal("login");
             navigate("/", { replace: true });
         }

@@ -24,6 +24,7 @@
     "flag-icons": "^7.5.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.33.0",
+    "pg": "^8.23.1",
     "radix-ui": "^1.6.7",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

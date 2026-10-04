@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import {useAuth} from '@/context/AuthContext'
 import { API_URL } from '@/config.js'
+import { Target, BarChart3, Trophy, Zap } from "lucide-react";
+import {Card, CardContent} from '@/components/ui/card'
+import heroImg from '@/assets/hero_img.svg'
+
 
 function Home()
 {
