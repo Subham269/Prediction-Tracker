@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import pool from './db.js'
 import express from 'express';
 import cors from 'cors';
 import Database from 'better-sqlite3';
@@ -53,16 +54,22 @@ db.exec(`CREATE TABLE IF NOT EXISTS predictions(
     return new Date(`${date}T${time || "00:00"}:00+05:30`).getTime();
     }
 
-app.get('/api/matches', (req,res)=> {
-    const {sport}=req.query
-    let matches;
-    if(sport)
-        matches=db.prepare('SELECT * FROM matches WHERE sport = ? ').all(sport);
-    else 
-        matches=db.prepare('SELECT * FROM matches').all();
-    res.json(matches);
+app.get('/api/matches', async (req,res)=> {
+    try
+    {    
+        const sport = req.query.sport ?? null ; 
+        
+            const { rows }=await pool.query('SELECT id, team1 , team2 , sport, match_date as date, created_at as "createdAt" FROM matches WHERE ($1::TEXT IS NULL OR sport = $1) ORDER BY match_date ',[sport]);
+        res.json(rows);
+    }
+    catch(err)
+    {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
 })
-app.post('/api/matches',authenticate, (req,res)=> {
+app.post('/api/matches',authenticate, async (req,res)=> {
+   try { 
     const {team1} = req.body;
     const {team2} = req.body;
     if(!team1 || !team2)
@@ -72,14 +79,47 @@ app.post('/api/matches',authenticate, (req,res)=> {
     if (!date) return res.status(400).json({ error: 'Date is required!' });
     if(!sport)
     return res.status(400).json({error : 'Sport is required!'});
-    const stmt=db.prepare('INSERT INTO matches (team1, team2, sport, date) VALUES (?,?,?,?)').run(team1,team2,sport,date);
-    res.status(201).json({id: stmt.lastInsertRowid, team1, team2});
-});
-app.get('/api/predictions',authenticate, (req,res)=> {
-    const sts=db.prepare('SELECT p.id, p.matchId, p.predictedOutcome, p.actualOutcome, p.isCorrect, p.createdAt, m.sport, m.team1, m.team2 FROM predictions p JOIN matches m ON p.matchId = m.id WHERE userId= ?').all(req.userId);
-    res.json(sts);
+    if (Number.isNaN(new Date(date).getTime())) {
+    return res.status(400).json({ error: "date is not a valid date" });
+    }
 
-})
+    const { rows }= await pool.query('INSERT INTO matches (team1, team2, sport, match_date) VALUES ($1,$2,$3,$4) RETURNING id, team1, team2, sport, match_date AS date, created_at AS "createdAt"', [team1,team2,sport,date]);
+
+    res.status(201).json(rows[0]);}
+    catch(err)
+    {
+         // 23514 = CHECK constraint violation (sport not in the allowed list)
+        if (err.code === "23514") {
+        return res.status(400).json({ error: "sport must be 'cricket' or 'football'" });
+        }
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.get("/api/predictions", authenticate, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT p.id,
+              p.match_id          AS "matchId",
+              p.predicted_outcome AS "predictedOutcome",
+              p.actual_outcome    AS "actualOutcome",
+              p.is_correct        AS "isCorrect",
+              p.created_at        AS "createdAt",
+              m.sport, m.team1, m.team2
+       FROM predictions p
+       JOIN matches m ON p.match_id = m.id
+       WHERE p.user_id = $1
+       ORDER BY p.created_at DESC`,
+      [req.user_id]
+    );
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post('/api/predictions',authenticate,(req,res)=> {
     const {predictedOutcome,matchId} = req.body;
     if(!predictedOutcome)
