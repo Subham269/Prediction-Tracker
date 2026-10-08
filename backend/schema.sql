@@ -17,7 +17,8 @@ CREATE TABLE matches (
   team1       TEXT NOT NULL,
   team2       TEXT NOT NULL,
   sport       TEXT NOT NULL CHECK (sport IN ('cricket', 'football')),
-  match_date  TIMESTAMPTZ NOT NULL,
+  match_date  DATE NOT NULL,
+  start_time  TEXT CHECK (start_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -59,42 +59,56 @@ app.get('/api/matches', async (req,res)=> {
     {    
         const sport = req.query.sport ?? null ; 
         
-            const { rows }=await pool.query('SELECT id, team1 , team2 , sport, match_date as date, created_at as "createdAt" FROM matches WHERE ($1::TEXT IS NULL OR sport = $1) ORDER BY match_date ',[sport]);
-        res.json(rows);
-    }
+            const { rows }=await pool.query(`SELECT id, team1, team2, sport,
+                to_char(match_date, 'YYYY-MM-DD') AS date,
+                start_time AS "startTime",
+                created_at AS "createdAt"
+            FROM matches
+            WHERE ($1::text IS NULL OR sport = $1)
+            ORDER BY match_date, start_time NULLS FIRST`,[sport]);
+                    res.json(rows);
+                }
     catch(err)
     {
         console.error(err);
         res.status(500).json({ error: "Server error" });
     }
 })
-app.post('/api/matches',authenticate, async (req,res)=> {
-   try { 
-    const {team1} = req.body;
-    const {team2} = req.body;
-    if(!team1 || !team2)
-    return res.status(400).json({error : 'Both Teams are required!'});
-    const {sport} = req.body;
-    const {date} = req.body;
-    if (!date) return res.status(400).json({ error: 'Date is required!' });
-    if(!sport)
-    return res.status(400).json({error : 'Sport is required!'});
-    if (Number.isNaN(new Date(date).getTime())) {
-    return res.status(400).json({ error: "date is not a valid date" });
+app.post("/api/matches", async (req, res) => {
+  try {
+    const { team1, team2, sport, date, startTime } = req.body;
+
+    if (!team1 || !team2 || !sport || !date) {
+      return res.status(400).json({ error: "team1, team2, sport and date are required" });
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: "date must be YYYY-MM-DD" });
+    }
+    if (startTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime)) {
+      return res.status(400).json({ error: "startTime must be HH:MM (24-hour)" });
     }
 
-    const { rows }= await pool.query('INSERT INTO matches (team1, team2, sport, match_date) VALUES ($1,$2,$3,$4) RETURNING id, team1, team2, sport, match_date AS date, created_at AS "createdAt"', [team1,team2,sport,date]);
+    const { rows } = await pool.query(
+      `INSERT INTO matches (team1, team2, sport, match_date, start_time)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, team1, team2, sport,
+                 to_char(match_date, 'YYYY-MM-DD') AS date,
+                 start_time AS "startTime",
+                 created_at AS "createdAt"`,
+      [team1, team2, sport, date, startTime || null]
+    );
 
-    res.status(201).json(rows[0]);}
-    catch(err)
-    {
-         // 23514 = CHECK constraint violation (sport not in the allowed list)
-        if (err.code === "23514") {
-        return res.status(400).json({ error: "sport must be 'cricket' or 'football'" });
-        }
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    if (err.code === "23514") {
+      return res.status(400).json({ error: "sport must be 'cricket' or 'football'" });
     }
+    if (err.code === "22008") {
+      return res.status(400).json({ error: "date is not a real calendar date" });
+    }
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 app.get("/api/predictions", authenticate, async (req, res) => {
@@ -120,60 +134,122 @@ app.get("/api/predictions", authenticate, async (req, res) => {
   }
 });
 
-app.post('/api/predictions',authenticate,(req,res)=> {
-    const {predictedOutcome,matchId} = req.body;
-    if(!predictedOutcome)
-        return res.status(400).json({error : 'Predicted Outcome is required!'});
-    const userId = req.userId
+app.post("/api/predictions", authenticate, async (req, res) => {
+  try {
+    const { predictedOutcome } = req.body;
+    const matchId = Number(req.body.matchId);
+    const userId = req.userId; // use whatever name your middleware sets
 
-    const match = db
-    .prepare("SELECT id, date, startTime FROM matches WHERE id = ?")
-    .get(matchId);
-
-    if (!match) {
-    return res.status(404).json({ error: "Match not found." });
+    if (!predictedOutcome) {
+      return res.status(400).json({ error: "Predicted Outcome is required!" });
+    }
+    if (!Number.isInteger(matchId)) {
+      return res.status(400).json({ error: "matchId must be a number" });
     }
 
+    // 1. Does the match exist? When does it start?
+    const { rows: matchRows } = await pool.query(
+      `SELECT id,
+              to_char(match_date, 'YYYY-MM-DD') AS date,
+              start_time AS "startTime"
+       FROM matches
+       WHERE id = $1`,
+      [matchId]
+    );
+
+    if (matchRows.length === 0) {
+      return res.status(404).json({ error: "Match not found." });
+    }
+
+    // 2. Has it started?
+    const match = matchRows[0];
     const startMs = matchStartMs(match.date, match.startTime);
 
     if (Number.isNaN(startMs)) {
-    console.error("Bad date format for match", match.id, match.date);
-    return res.status(500).json({ error: "Match date is invalid." });
+      console.error("Bad date format for match", match.id, match.date);
+      return res.status(500).json({ error: "Match date is invalid." });
+    }
+    if (Date.now() >= startMs) {
+      return res.status(403).json({ error: "Predictions are closed for this match." });
     }
 
-    if (Date.now() >= startMs) {
-        return res.status(403).json({ error: "Predictions are closed for this match." });
+    // 3. Save it
+    const { rows } = await pool.query(
+      `INSERT INTO predictions (match_id, predicted_outcome, user_id)
+       VALUES ($1, $2, $3)
+       RETURNING id,
+                 match_id          AS "matchId",
+                 predicted_outcome AS "predictedOutcome",
+                 created_at        AS "createdAt"`,
+      [matchId, predictedOutcome, userId]
+    );
+
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "You've already predicted this match." });
     }
-    try {
-        const stmts=db.prepare('INSERT INTO predictions (matchId, predictedOutcome, userId) VALUES (? , ?, ?)').run(req.body.matchId,predictedOutcome,userId);
-        res.status(201).json({id : stmts.lastInsertRowid,predictedOutcome,matchId }); 
+    if (err.code === "23503") {
+      return res.status(400).json({ error: "Match doesn't exist." });
     }
-    catch(error)
-    {
-        console.log(error)
-        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") 
-        {
-        return res.status(409).json({ error: "You've already predicted this match." });
-        }
-        else if(error.code==='SQLITE_CONSTRAINT_FOREIGNKEY')
-        {
-            return res.status(400).json({error : 'Match Doesnt exist'})
-        }
-        res.status(500).json({error: 'Internal Server Error'})
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.patch("/api/predictions/:id", authenticate, async (req, res) => {
+  const { actualOutcome } = req.body;
+  const predictionId = Number(req.params.id);
+
+  if (!actualOutcome) {
+    return res.status(400).json({ error: "actualOutcome is required" });
+  }
+  if (!Number.isInteger(predictionId)) {
+    return res.status(400).json({ error: "Invalid prediction id" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Record the result (only if it hasn't been recorded yet)
+    const { rows } = await client.query(
+      `UPDATE predictions
+       SET actual_outcome = $1,
+           is_correct = (predicted_outcome = $1)
+       WHERE id = $2 AND user_id = $3 AND actual_outcome IS NULL
+       RETURNING id,
+                 match_id          AS "matchId",
+                 predicted_outcome AS "predictedOutcome",
+                 actual_outcome    AS "actualOutcome",
+                 is_correct        AS "isCorrect"`,
+      [actualOutcome, predictionId, req.userId]
+    );
+
+    if (rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res
+        .status(404)
+        .json({ error: "Prediction not found, or its result is already recorded" });
     }
-})
-app.patch('/api/predictions/:id',authenticate, (req,res)=> {
-    const {actualOutcome}=req.body;
-    const stap=db.prepare('SELECT predictedOutcome FROM predictions WHERE id= ? AND userId = ? ' ).get(req.params.id,req.userId);
-    if(!stap)
-        return res.status(404).json({error : 'Prediction Not Found'});
-    const step = (stap.predictedOutcome === actualOutcome)?'true':'false';
-    user.points= (step=='true')?(user.points+3):(user.points-1);
-    const sta=db.prepare('UPDATE predictions SET actualOutcome = ?, isCorrect = ? WHERE id = ? AND userId = ? ').run(actualOutcome,step,req.params.id,req.userId);
-    if(sta.changes===0)
-        return res.status(404).json({error: 'Not Found'})
-    res.status(200).json('Done');
-})
+
+    // 2. Update the user's points
+    const pointsChange = rows[0].isCorrect ? 3 : -1;
+    await client.query(
+      "UPDATE users SET points = points + $1 WHERE id = $2",
+      [pointsChange, req.userId]
+    );
+
+    await client.query("COMMIT");
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  } finally {
+    client.release();
+  }
+});
 app.post('/api/auth/register',async (req,res)=> {
     try 
     {
