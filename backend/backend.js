@@ -4,7 +4,6 @@ dotenv.config();
 import pool from './db.js'
 import express from 'express';
 import cors from 'cors';
-import Database from 'better-sqlite3';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -16,38 +15,8 @@ app.use(cors({
 
 app.use(express.json());
 
-const db = new Database('predictions-app.db');
-
-db.pragma('foreign_keys=ON');
 const fbi_level_secret_key= process.env.jwtsecret;
 
-db.exec(`CREATE TABLE IF NOT EXISTS user(
-    id INTEGER  PRIMARY KEY AUTOINCREMENT,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(254) UNIQUE NOT NULL,
-    points INTEGER NOT NULL DEFAULT 0,
-    password TEXT NOT NULL, 
-    createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes'))
-    )`)
-db.exec(`CREATE TABLE IF NOT EXISTS matches(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    team1 TEXT NOT NULL,
-    team2 TEXT NOT NULL,
-    sport TEXT NOT NULL,
-    date TEXT NOT NULL,
-    createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')))
-    `)
-db.exec(`CREATE TABLE IF NOT EXISTS predictions( 
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    matchId INTEGER,
-    predictedOutcome TEXT NOT NULL,
-    actualOutcome TEXT,
-    isCorrect TEXT,
-    createdAt TEXT DEFAULT (datetime('now', '+5 hours', '+30 minutes')),
-    userId INTEGER REFERENCES user(id),
-    FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE)`)
-
-    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_predictions_user_match_guard ON predictions     (userId,matchId)')
 
 
     function matchStartMs(date, time) {
@@ -125,7 +94,7 @@ app.get("/api/predictions", authenticate, async (req, res) => {
        JOIN matches m ON p.match_id = m.id
        WHERE p.user_id = $1
        ORDER BY p.created_at DESC`,
-      [req.user_id]
+      [req.userId]
     );
     res.status(200).json(rows);
   } catch (err) {
@@ -250,80 +219,87 @@ app.patch("/api/predictions/:id", authenticate, async (req, res) => {
     client.release();
   }
 });
-app.post('/api/auth/register',async (req,res)=> {
-    try 
-    {
-        const {email} = req.body;
-        const {username}= req.body
-        if(!email)
-            return res.status(400).json({error : 'E-mail is required!'});
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ error: 'Invalid email address' });
-}
-        if(!username)
-            return res.status(400).json({error : 'Username is required!'});
-        const {password} = req.body;
-        if(!password)
-            return res.status(400).json({error : 'Password is required!'});
-        const hashedPassword = await bcrypt.hash(password,10)
-        const normalizedemail = email.trim().toLowerCase();
-        const normalizedusername = username.trim();
-        const stms=db.prepare(`INSERT INTO user(email, password, username) VALUES(? , ?, ?)`
-        ).run(normalizedemail,hashedPassword,normalizedusername)
 
-        return res.status(201).json({id : stms.lastInsertRowid,email : normalizedemail})
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { email, username, password } = req.body;
+
+    const normalizedEmail = email?.trim().toLowerCase();
+    const normalizedUsername = username?.trim();
+
+    if (!normalizedEmail) {
+      return res.status(400).json({ error: "E-mail is required!" });
     }
-    catch(error)
-    {
-        if(error.message.includes('UNIQUE constraint failed: user.email'))
-        {
-             return res.status(409).json({ error: 'Email already registered' });
-        }
-        else if(error.message.includes('UNIQUE constraint failed: user.username'))
-        {
-           return res.status(409).json({ error: 'Username is Taken' });
-        }
-        else
-        {
-            console.error(error);
-            return res.status(500).json({ error: 'Internal Server Error' });
-        }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ error: "Invalid email address" });
+    }
+    if (!normalizedUsername) {
+      return res.status(400).json({ error: "Username is required!" });
+    }
+    if (!password) {
+      return res.status(400).json({ error: "Password is required!" });
     }
 
-})
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { rows } = await pool.query(
+      `INSERT INTO users (email, password, username)
+       VALUES ($1, $2, $3)
+       RETURNING id, email, username`,
+      [normalizedEmail, hashedPassword, normalizedUsername]
+    );
+
+    return res.status(201).json(rows[0]);
+  } catch (error) {
+    if (error.code === "23505") {
+      if (error.constraint === "users_email_key") {
+        return res.status(409).json({ error: "Email already registered" });
+      }
+      if (error.constraint === "users_username_key") {
+        return res.status(409).json({ error: "Username is Taken" });
+      }
+    }
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 app.post('/api/auth/login', async (req,res)=> {
     try 
     {
-        const {email,password} = req.body;
-        if(!email)
-            return res.status(400).json({error : 'E-mail is required!'});
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const { email, password} = req.body;
 
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ error: 'Invalid email address' });
-}
-        if(!password)
-            return res.status(400).json({error : 'Password is required!'});
-        const normalizedemail = email.trim().toLowerCase();
-        const user=db.prepare(`SELECT * FROM user WHERE email=?`).get(normalizedemail)
-        if(!user)
+      const normalizedEmail = email?.trim().toLowerCase();
+
+      if (!normalizedEmail) {
+        return res.status(400).json({ error: "E-mail is required!" });
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(normalizedEmail)) {
+        return res.status(400).json({ error: "Invalid email address" });
+      }
+      if (!password) {
+        return res.status(400).json({ error: "Password is required!" });
+      }
+
+        const {rows}=await pool.query(`SELECT * FROM users WHERE email=$1`,[normalizedEmail])
+        if(rows.length === 0 )
         {
             return res.status(401).json({error : 'Invalid E-mail or Password'})
         }
-        const passwordMatch = await bcrypt.compare(password,user.password);
+        const passwordMatch = await bcrypt.compare(password,rows[0].password);
         if(!passwordMatch)
         {
             return res.status(401).json({error : 'Invalid E-mail or Password'})
         }
         const token= jwt.sign(
-            { userId : user.id},
+            { userId : rows[0].id},
             fbi_level_secret_key,
             { expiresIn: '7d'}
         )
         return res.status(200).json({token,
-            user: { id: user.id, username: user.username, email: user.email }
+            user: { id: rows[0].id, username: rows[0].username, email: rows[0].email }
         })
     }
     catch(error) {
@@ -335,9 +311,15 @@ app.post('/api/auth/login', async (req,res)=> {
     }
 })
 
-app.get('/api/leaderboard',authenticate, (req,res)=>{
-    const strows=db.prepare('SELECT id, username,points FROM "user" ORDER BY points DESC, username ASC LIMIT 20').all();
-    res.json(strows.map((r,i)=>({rank : i+1, ...r})));
+app.get('/api/leaderboard',authenticate, async (req,res)=>{
+  try  
+  {const {rows}=await pool.query('SELECT id, username,points FROM "users" ORDER BY points DESC, username ASC LIMIT 20');
+    res.json(rows.map((r,i)=>({rank : i+1, ...r})));
+  }
+  catch(err)
+  {
+
+  }
 })
 
 
