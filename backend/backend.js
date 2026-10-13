@@ -16,6 +16,7 @@ app.use(cors({
 app.use(express.json());
 
 const fbi_level_secret_key= process.env.jwtsecret;
+const PORT = process.env.PORT || 3000;
 
 
 
@@ -348,8 +349,8 @@ function authenticate(req,res,next)
 }
 
 
-app.listen(3000 , (error)=> {
+app.listen(PORT,'0.0.0.0', (error)=> {
     if(error)
         throw error;
-    console.log('Running on LocalHost 3000')
+    console.log('Running on LocalHost port ${PORT}')
     })
