@@ -1,67 +1,157 @@
-# 🏆 Sports Prediction Tracker
+# 🏆 PredictionOS — Full-Stack Sports Prediction Tracker
 
-A React app that lets you log your sports predictions before matches happen, record what actually happened afterward, and track your accuracy over time.
+A modern full-stack web platform where sports enthusiasts predict upcoming Cricket and Football matches, lock in their picks before kickoff, earn points, track performance metrics, and compete on a global leaderboard.
 
-🔗 Live Demo: [https://prediction-tracker-subham.netlify.app/]
 
-React · React Router · Tailwind CSS · Netlify
+---
 
-## ✨ Features
+## ⚡ Key Features
 
-🔍 Log predictions for Cricket and Football before a match
-✅ Manually Record actual results once the match is over
-📊 Live accuracy stats — correct vs. total attempted
-🗂️ Full prediction history
-💾 Data persists across sessions via localStorage
-🎨 Clean, responsive UI with a custom gradient theme
+* **🏏 Cricket & ⚽ Football Match Predictions:** Browse upcoming fixtures with team flags, dates, and match kickoff times.
+* **⏱️ Match Deadline & Time-Locking System:** Predictions automatically close as soon as the match kickoff time arrives (`Date.now() >= startMs`), both client-side and enforced strictly on the server.
+* **🔐 Secure Authentication & Authorization:**
+  * User registration and login powered by **bcrypt** password hashing (10 rounds) and **JWT (JSON Web Tokens)** with a 7-day expiration.
+  * Client-side **Protected Routes** that guard private pages and automatically trigger the login modal.
+  * Context-driven auth modals accessible anywhere across the app.
+* **🏆 Global Competitive Leaderboard:**
+  * Real-time rankings sorted by points and username.
+  * Top-3 medal podium badges (🥇, 🥈, 🥉) and personalized user highlighting.
+* **🎯 My Predictions Dashboard:**
+  * Complete personal history of pending, winning, and losing picks.
+  * Visual status tags displaying match outcome verification (`✓ Correct`, `✗ Incorrect`, or `Locked In`).
+* **📈 Real-Time Performance Analytics (Dashboard):**
+  * Live accuracy percentages, total picks, resolved matches, current winning streaks, and all-time best streaks.
+* **⚖️ Transactional Scoring Engine:**
+  * Uses PostgreSQL **ACID transactions (`BEGIN`, `COMMIT`, `ROLLBACK`)** for settling match outcomes.
+  * Rewards **+3 points** for correct predictions and applies a **-1 point** penalty for incorrect predictions.
+  * Database-level single-settlement guarantee preventing double-scoring.
+* **🐳 Docker Multi-Container Architecture:** Production-ready containerization for both Node.js and PostgreSQL with health checks and persistent storage volumes.
 
-## 🛠️ Built With
+---
 
-- React (functional components + hooks)
-- Vite for fast dev/build tooling
-- React Router for multi-page navigation
-- Tailwind CSS for styling
-- localStorage for client-side persistence
-- Netlify for deployment
+## 🛠️ Tech Stack
 
-## ⚙️ How It Works
+### **Frontend**
+* **Framework:** React 19 + Vite 8
+* **Routing:** React Router v7
+* **Styling & UI:** Tailwind CSS v4, Lucide React Icons, Flag Icons (`flag-icons`)
+* **Component Primitives:** Radix UI (`@radix-ui`) / Shadcn UI primitives
+* **Notifications:** Sonner Toast Notifications
+* **Typography:** `@fontsource-variable/geist`
 
-Each prediction is stored as an object — match label, your predicted outcome, and (once known) the actual outcome. Recording a result uses an immutable update pattern (`.map()` + spread) to find and update the matching prediction without disturbing the rest of the history. Stats are calculated live by filtering the full prediction list on every render — no separate counters to keep in sync, so the numbers can never drift out of date.
+### **Backend**
+* **Runtime:** Node.js (ES Modules)
+* **Framework:** Express.js 5
+* **Security & Auth:** JSON Web Tokens (`jsonwebtoken`), Bcrypt (`bcrypt`), CORS (`cors`)
+* **Environment:** Dotenv (`dotenv`)
+
+### **Database & DevOps**
+* **Database:** PostgreSQL 16 (Relational DB with check constraints & identity keys)
+* **Client Driver:** `pg` (node-postgres connection pool)
+* **Containerization:** Docker & Docker Compose
+
+---
+
+## 🏗️ Architecture & Database Schema
+
+### Database Model:
+* **`users`**: Manages credentials (`email`, `username`, `password` hash), registration timestamps, and cumulative `points`.
+* **`matches`**: Fixtures with `sport` (`cricket` | `football`), `team1`, `team2`, `match_date`, and `start_time` (checked against regex `^([01][0-9]|2[0-3]):[0-5][0-9]$`).
+* **`predictions`**: Relational junction table enforcing `UNIQUE (user_id, match_id)` to prevent duplicate picks per match, storing `predicted_outcome`, `actual_outcome`, and `is_correct`.
+
+---
 
 ## 🚀 Getting Started
 
-Clone the repo and run it locally:
+### Prerequisites
+* [Node.js](https://nodejs.org/) (v20+ recommended)
+* [PostgreSQL](https://www.postgresql.org/) (v16+) or [Docker Desktop](https://www.docker.com/)
 
-```bash
-git clone https://github.com/Subham269/Prediction-Tracker
-cd prediction-tracker
-npm install
-npm run dev
-```
+---
 
-## 📸 Preview
+### Option 1: Running with Docker (Recommended)
 
-![alt text](<Screenshot 2026-08-02 213742.png>)
-![alt text](<Screenshot 2026-08-02 213759.png>)
-![alt text](<Screenshot 2026-08-02 213824.png>)
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Subham269/Prediction-Tracker.git
+   cd Prediction-Tracker
+   ```
 
-## 📚 What I Learned
+2. **Configure Environment Variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   PORT=3000
+   DATABASE_URL=postgres://predictionos:devpassword@db:5432/predictionos
+   JWT_SECRET=your_super_secret_jwt_key
+   VITE_API_URL=http://localhost:3000
+   ```
 
-This project was built as a hands-on way to practice:
+3. **Start the containers:**
+   ```bash
+   docker compose up --build
+   ```
+   * Backend will be available at `http://localhost:3000`
+   * PostgreSQL will be available at `localhost:5433`
 
-- Multi-page routing and shared layout with React Router
-- Managing multiple related pieces of state (form state vs. active state vs seasonal states)
-- Reading/writing structured data to localStorage with JSON implementation
-- Immutable state updates on arrays of objects — adding, and finding-and-updating a single item
-- Conditional rendering and conditional styling based on data
-- Debugging real logic bugs (stale state closures, button `type` defaults inside forms, scoping issues)
-- Using TailWind CSS to give a modern UI to the app
+4. **Run the Frontend locally:**
+   ```bash
+   npm install
+   npm run dev
+   ```
+   Open `http://localhost:5173` in your browser.
 
-## 🔮 Future Improvements
+---
 
-- Node.js + Express backend with a real database
-- Multi-device sync
-- Auto-fetch real match data via a public sports API
-- A page dedicated to MMA 
+### Option 2: Running Locally Without Docker
 
-Made by Subham Saha — follow the build journey on [LinkedIn](https://www.linkedin.com/in/subham-saha-72ab062a3/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_recent_activity_content_view%3BdPmW9iW3TruMUjHcrQuGeQ%3D%3D).
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Set up PostgreSQL database:**
+   Create a PostgreSQL database and run the schema:
+   ```bash
+   psql -U postgres -d prediction_tracker -f backend/schema.sql
+   ```
+
+3. **Create `.env` file:**
+   ```env
+   PORT=3000
+   DATABASE_URL=postgresql://postgres:<your_password>@localhost:5432/prediction_tracker
+   JWT_SECRET=your_super_secret_jwt_key
+   VITE_API_URL=http://localhost:3000
+   ```
+
+4. **Start the Backend:**
+   ```bash
+   npm run server
+   ```
+
+5. **Start the Frontend:**
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|:---:|
+| `POST` | `/api/auth/register` | Register new user account | ❌ |
+| `POST` | `/api/auth/login` | Authenticate user & return JWT token | ❌ |
+| `GET` | `/api/matches` | Fetch all matches (supports `?sport=cricket` or `?sport=football`) | ❌ |
+| `POST` | `/api/matches` | Create a new match fixture | ❌ |
+| `GET` | `/api/predictions` | Retrieve predictions for the authenticated user | ✅ |
+| `POST` | `/api/predictions` | Submit a match prediction (pre-kickoff only) | ✅ |
+| `PATCH` | `/api/predictions/:id` | Resolve match outcome & update player points (+3 / -1) | ✅ |
+| `GET` | `/api/leaderboard` | Get the top 20 players ranked by points | ✅ |
+
+---
+
+## 👨‍💻 Author
+
+**Subham Saha**
+* LinkedIn: [Subham Saha](https://www.linkedin.com/in/subham-saha-72ab062a3/)
+* GitHub: [@Subham269](https://github.com/Subham269)

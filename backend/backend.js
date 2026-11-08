@@ -180,8 +180,10 @@ app.patch("/api/predictions/:id", authenticate, async (req, res) => {
 
   const client = await pool.connect();
   try {
-    await client.query("BEGIN");
 
+   
+    await client.query("BEGIN");
+    console.log("Executing prediction update...");
     // 1. Record the result (only if it hasn't been recorded yet)
     const { rows } = await client.query(
       `UPDATE predictions
