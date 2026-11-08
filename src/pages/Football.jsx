@@ -102,7 +102,7 @@ function Football() {
     const predictions_c = predictions.filter(p => p.sport === "football")
     const total = predictions_c.length;
     const resolved = predictions_c.filter(p => p.actualOutcome !== null);
-    const correct = resolved.filter(p => p.isCorrect === "true").length;
+    const correct = resolved.filter(p => p.isCorrect === true).length;
     const accuracy = resolved.length
         ? ((correct / resolved.length) * 100).toFixed(1)
         : 0;
@@ -112,7 +112,7 @@ function Football() {
     );
     let streak = 0;
     for (const p of sorted) {
-        if (p.isCorrect === "true") streak++;
+        if (p.isCorrect === true) streak++;
         else break;
     }
 
@@ -121,7 +121,7 @@ function Football() {
     let bestStreak = 0;
     let tempStreak = 0;
     for (const p of sorted) {
-        if (p.isCorrect == "true")
+        if (p.isCorrect == true)
             tempStreak++;
         else {
             bestStreak = Math.max(bestStreak, tempStreak);
@@ -244,12 +244,12 @@ function Football() {
 
                                     {alreadyPredicted ? (
 
-                                        myPrediction.isCorrect === 'true' ? (
+                                        myPrediction.isCorrect === true ? (
                                             <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
                                                 ✓ Correct ({myPrediction.predictedOutcome})
                                             </div>
 
-                                        ) : myPrediction.isCorrect === 'false' ? (
+                                        ) : myPrediction.isCorrect === false ? (
                                             <div className="flex flex-col px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-medium text-sm">
                                                 ✗ Incorrect ({myPrediction.predictedOutcome})
                                             </div>

@@ -6,12 +6,27 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Database files and backups
 predictions-app.db
+prediction_data.sql
+prediction_data_fixed.sql
+*.dump
+
+# Dependencies
 node_modules/
+
+# Build output
 dist/
 dist-ssr/
+
+# Local configuration
 *.local
-.env 
+
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*

@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import {useAuth} from '@/context/AuthContext'
 import { API_URL } from '@/config.js'
+import { Target, BarChart3, Trophy, Zap } from "lucide-react";
+import {Card, CardContent} from '@/components/ui/card'
+import heroImg from '@/assets/hero_img.svg'
+
 
 function Home()
 {
@@ -27,7 +31,7 @@ function Home()
     }, [token]);
     const total = predictions.length;
     const resolved = predictions.filter(p => p.actualOutcome !== null);
-    const correct = resolved.filter(p => p.isCorrect === "true").length;
+    const correct = resolved.filter(p => p.isCorrect === true).length;
     const accuracy = resolved.length
     ? ((correct / resolved.length) * 100).toFixed(1)
     : 0;
@@ -37,7 +41,7 @@ function Home()
     );
     let streak = 0;
     for (const p of sorted) {
-    if (p.isCorrect === "true") streak++;
+    if (p.isCorrect === true) streak++;
     else break;
     }
 

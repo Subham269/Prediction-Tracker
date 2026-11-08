@@ -173,7 +173,7 @@ export default function MyPredictions() {
                                                 Come back later to check if you're correct!
                                             </span>
                                         </div>
-                                    ) : prediction.isCorrect === 'true' ? (
+                                    ) : prediction.isCorrect === true ? (
                                         <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-medium text-sm">
                                             ✓ Correct ({prediction.predictedOutcome})
                                         </div>

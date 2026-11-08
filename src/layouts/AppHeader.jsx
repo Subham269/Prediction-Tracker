@@ -24,10 +24,10 @@ function AppHeader()
         </Button>
       </div>) 
       : (
-        <div>
+        <div className="grid-cols-2 space-y-2">
               <span>{user.username}</span>
 
-              <button onClick={logout}>
+              <button className="bg-[#06A248] hover:bg-[#058a3d] text-white rounded-lg ml-2 px-2" onClick={logout}>
               Logout
               </button>
         </div>
