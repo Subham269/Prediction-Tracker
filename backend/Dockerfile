@@ -4,10 +4,10 @@ WORKDIR /app
 
 # Copy package files first so Docker caches the npm install layer
 COPY package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 
 # Then copy the rest of the code
-COPY . .
+COPY backend/ ./
 
 EXPOSE 3000
 

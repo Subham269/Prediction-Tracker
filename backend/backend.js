@@ -352,5 +352,5 @@ function authenticate(req,res,next)
 app.listen(PORT,'0.0.0.0', (error)=> {
     if(error)
         throw error;
-    console.log('Running on LocalHost port ${PORT}')
+    console.log(`Running on LocalHost port ${PORT}`)
     })

@@ -1,0 +1,2 @@
+GET http://localhost:3000/api/leaderboard
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImlhdCI6MTc5NDEyMTUwMCwiZXhwIjoxNzk0NzI2MzAwfQ.2wVPT_wszilCUMGVTX3Ag_Q7m9a5J5yzaGkmI1Xm7ts
