@@ -1,0 +1,17 @@
+@baseUrl = http://localhost:3000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImlhdCI6MTc5NDE1Njg0NywiZXhwIjoxNzk0NzYxNjQ3fQ.yHBqhpu1xRNZaTOjHtasJoWrD19o4T4jX9C8kVpYyJQ
+
+
+
+
+### 2. Add a football match
+
+PATCH {{baseUrl}}/api/predictions/14
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+"actualOutcome": "New Zealand"
+}
+
+
